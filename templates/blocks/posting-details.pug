@@ -1,0 +1,103 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/posting-details.js')
+
+block content
+    .d-flex.justify-content-between.align-items-center
+        h3 [#10301] Need Interpreter at UVIC
+        strong
+            | Posted on January 29, 2017 by 
+            a(href='/profile') Coordinator
+    .card
+        .card-body.bg-light
+            .d-flex.justify-content-between.flex-wrap
+                .w-24
+                    label(for='when') When:
+                    |  3:30 PM - 6:30 PM
+                .w-24
+                    label(for='location') Type:
+                    |  In Person
+                .w-24
+                    label(for='school') Where:
+                    |  University of Victoria
+                .w-24
+                    label(for='preferred') Preferred:
+                    |  Certified
+                .w-24
+                    label(for='looking-for') Looking:
+                    |  Interpreter, Transcriber
+                .w-24
+                    label(for='course-number') Course #:
+                    |  CRN20502
+                .w-24
+                    label(for='email') Email:
+                    a(href='mailto:email@email.com')  email@email.com
+                .w-24
+                    label(for='email') Phone:
+                    |  (604)123-4567
+            .card.mb-2
+                .card-body
+                    label.d-block(for='details') Details:
+                    |                             Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, velit dolor! Vero iste obcaecati aspernatur aliquid odit esse delectus dolores, vel eos amet voluptate enim eius ad tempore? Unde, sunt.
+            if user === 'coordinator'
+                h3 Application Status
+                .alert.alert-info.d-flex.justify-content-around
+                    h5 Interpreters: 0/2 Found
+                    h5 Transcribers: 0/2 Found
+                hr
+                h3 Applicants
+                hr
+                .applicant.border-bottom.mb-2.pb-2
+                    .d-flex.justify-content-between.align-items-center.mx-auto
+                        .w-5
+                            img.rounded-circle.w-90(src='/image/profile.png')
+                        .w-75
+                            a(href='/profile') Jackie Chan
+                            span.badge.badge-secondary.ml-1 Unverified
+                            span.badge.badge-secondary.ml-1 Unscreened
+                            span.badge.badge-primary.ml-1 +3
+                        .w-20.text-right
+                            button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
+                            button.btn.btn-sm.btn-success(type='button') Accept
+                    .applicant-comment
+                        label(for='comment') Comment:
+                        |  Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ex laborum corporis neque natus alias repellendus voluptate nostrum qui.
+                .applicant.border-bottom.mb-2.pb-2
+                    .d-flex.justify-content-between.align-items-center.mx-auto
+                        .w-5
+                            img.rounded-circle.w-90(src='/image/profile.png')
+                        .w-75
+                            a(href='/profile') Michael Jackson
+                            span.badge.badge-success.ml-1 Verified
+                            span.badge.badge-success.ml-1 Screened
+                            span.badge.badge-primary.ml-1 +15
+                        .w-20.text-right
+                            button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
+                            button.btn.btn-sm.btn-success(type='button') Accept
+                    .applicant-comment
+                        label(for='comment') Comment:
+                        |  Lorem ipsum, dolor sit amet consectetur adipisicing elit. Doloribus sint ut voluptas vitae et exercitationem earum laudantium numquam corrupti. Blanditiis fugit, soluta doloribus consectetur aliquam maxime ipsum saepe! Ab, expedita.
+                .applicant.border-bottom.mb-2.pb-2
+                    .d-flex.justify-content-between.align-items-center.mx-auto
+                        .w-5
+                            img.rounded-circle.w-90(src='/image/profile.png')
+                        .w-75
+                            a(href='/profile') Bruce Lee
+                            span.badge.badge-secondary.ml-1 Unverified
+                            span.badge.badge-secondary.ml-1 Unscreened
+                            span.badge.badge-primary.ml-1 +0
+                        .w-20.text-right
+                            button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
+                            button.btn.btn-sm.btn-success(type='button') Accept
+                    .applicant-comment
+                        label(for='comment') Comment:
+                        |  Lorem ipsum dolor sit amet consectetur adipisicing elit. Error fuga blanditiis perspiciatis laboriosam suscipit illum fugit impedit beatae vero unde sapiente ipsa iure, veritatis tempore debitis ea, eos officiis corrupti!
+            else if user === 'interpreter'
+                h3 Apply
+                form(action='/apply', method='post')
+                    .form-group
+                        input.form-control(type='text', name='comment', maxlength='100', placeholder='Enter any comments here')
+                    .form-group.text-right
+                        input.btn.btn-primary.mr-1(type='submit', value='Apply')
+                        input.btn.btn-secondary(type='reset', value='Clear')

@@ -1,0 +1,12 @@
+nav.navbar.navbar-light.bg-light.mb-3
+    if session === 'interpreter'
+        include interpreter-dropdown
+    else if session === 'coordinator'
+        include coordinator-dropdown
+    else if session === 'admin'
+        include admin-dropdown
+    //- everyone else
+    else
+        include dropdown
+    .mx-auto
+        h3 Post-Secondary Communications Access Services

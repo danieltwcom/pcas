@@ -1,0 +1,42 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/my-applications.js')
+
+block content
+    h3 My Applications
+    .card
+        .card-body.bg-light
+            form.application-applied(action='/application/withdraw', method='post')
+                input(type='hidden', name='id', value='10301')
+                .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                    .w-50
+                        a(href='#') [#10301] Interpreter needed at UVIC
+                    .w-25.text-right
+                        span.badge.badge-warning.application-status Waiting
+                    .w-25.text-right.application-submit
+                        button.btn.btn-sm.btn-danger(type='submit') Withdraw
+            form.application-in-progress(action='/application/complete', method='post')
+                input(type='hidden', name='id', value='10302')
+                .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                    .w-50
+                        a(href='#') [#10302] Interpreter needed at SFU
+                    .w-25.text-right
+                        span.badge.badge-warning.application-status In Progress
+                    .w-25.text-right.application-submit
+                        button.btn.btn-sm.btn-success(type='submit') Complete?
+            form.application-rate(action='/application/rate', method='post')
+                input(type='hidden', name='id', value='10303')
+                .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                    .w-50
+                        a(href='#') [#10303] Interpreter needed at UBC
+                    .w-25.text-right
+                        span.badge.badge-success.application-status Completed
+                    .w-25.text-right.application-submit
+                        input.btn.btn-sm.btn-info(type='submit', value='Verify', data-toggle='tooltip', title='Verify the coordinator/interpreter')
+            .text-center
+                | 1 
+                a(href='#')  2
+                a(href='#')  3
+                a(href='#')  Next
+                a(href='#')  Last

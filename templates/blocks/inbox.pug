@@ -1,0 +1,25 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/inbox.js')
+
+block content
+    h3 Inbox
+    table.table.table-striped.table-light.table-bordered
+        thead
+            tr
+                th Subject
+                th.w-15 Sender
+                th.w-15 Date Received
+                th.w-20
+        tbody
+            tr.font-weight-bold
+                td
+                    a(href='/message') Regarding Job [#10301]
+                td Interpreter_1
+                td January 29, 2017
+                td
+                    form.message-form.text-center(action='/mark-as-read', method='post')
+                        input(type='hidden', name='id', value='10301')
+                        input.btn.btn-sm.btn-success.mr-1.mark-as-read-button(name='read', value='Mark As Read', type='submit')
+                        input.btn.btn-sm.btn-danger.mark-as-read-button(type='submit', name='delete', value='Delete')

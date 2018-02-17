@@ -1,0 +1,79 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/edit-profile.js')
+
+block content
+    h3 Edit Profile
+    .card.mb-3
+        .card-body.bg-light
+            form(action='/edit-profile', method='post')
+                .d-flex.justify-content-between
+                    .form-group.w-45
+                        label(for='first-name') First Name:
+                        input.form-control(type='text', name='first_name')
+                    .form-group.w-45
+                        label(for='last-name') Last Name:
+                        input.form-control(type='text', name='last_name')
+                .d-flex.justify-content-between
+                    .form-group.w-45
+                        label(for='phone') School:
+                        select.form-control(name='school')
+                            option(value='uvic') University of Victoria
+                            option(value='sfu') Simon Fraser University
+                            option(value='ubc') University of British Columbia
+                            option(value='bcit') BCIT
+                    .form-group.w-45
+                        label(for='location') Location:
+                        input.form-control(type='text', name='location')
+                .d-flex.justify-content-between
+                    .form-group.w-45
+                        label(for='phone') Primary Phone #:
+                        input.form-control(type='text', name='phone')
+                    .form-group.w-45
+                        label(for='other-phone') Secondary Phone #:
+                        input.form-control(type='text', name='other-phone')
+                .d-flex.justify-content-between
+                    .form-group.w-45
+                        label.mr-2(for='age') Age:
+                        input.form-control(type='number', name='age')
+                    .form-group.w-45
+                        label.mr-2(for='gender') Gender:
+                        select.form-control(name='gender')
+                            option(value='male') Male
+                            option(value='female') Female
+                .form-group
+                    label(for='profile-description') Description:
+                    textarea.form-control.w-100(name='profile_description', rows='10')
+                .text-right
+                    input.btn.btn-primary.mr-1(type='submit', value='Update')
+                    input.btn.btn-secondary(type='reset', value='Clear')
+    h3 Change Email
+    .card.mb-3
+        .card-body.bg-light
+            form(action='/change-email', method='post')
+                .d-flex.justify-content-between
+                    .form-group.w-45
+                        label(for='email') New Email:
+                        input.form-control(type='email', name='email')
+                    .form-group.w-45
+                        label(for='confirm-email') Confirm Email:
+                        input.form-control(type='email', name='confirm_email')
+                .text-right
+                    input.btn.btn-primary(type='submit', value='Update')
+    h3 Change Password
+    .card
+        .card-body.bg-light
+            form(action='/change-password', method='post')
+                .d-flex.justify-content-between
+                    .form-group.w-33
+                        label(for='current-password') Current Password:
+                        input.form-control(type='password', name='current_password')
+                    .form-group.w-33
+                        label(for='new-password') New Password:
+                        input.form-control(type='password', name='new_password')
+                    .form-group.w-33
+                        label(for='confirm-password') Confirm Password:
+                        input.form-control(type='password', name='confirm_password')
+                .text-right
+                    input.btn.btn-primary(type='submit', value='Update')

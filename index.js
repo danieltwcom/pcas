@@ -22,6 +22,10 @@ var pool = new pg.Pool({
     port: process.env.DB_PORT
 });
 
+// Initializing PUG template
+app.set('view engine', 'pug');
+app.set('views', ['templates', 'templates/inc', 'templates/blocks', 'templates/dev']);
+
 // Sessions setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -29,8 +33,8 @@ app.use(session({
 }));
 
 // Route folders
-app.use("/style", express.static("css"));
-app.use("/scripts", express.static("scripts"));
+app.use("/style", [express.static("css"), express.static("css/vendor")]);
+app.use("/scripts", [express.static("scripts"), express.static("scripts/vendor")]);
 app.use("/image", express.static("image"));
 app.use("/inc", express.static("inc"));
 app.use('/fonts', express.static('fonts'));
@@ -38,51 +42,47 @@ app.use('/fonts', express.static('fonts'));
 // Routes
 // Get pages
 app.get("/", function (req, resp) {
-    resp.sendFile(pF + "/index.html");
+    resp.render('blocks/login');
 });
 
 app.get('/profile', function(req, resp) {
-    resp.sendFile(pF + '/profile.html');
+    resp.render('blocks/profile');
 });
 
 app.get('/edit-profile', function(req, resp) {
-    resp.sendFile(pF + '/edit-profile.html');
+    resp.render('blocks/edit-profile')
 });
 
 app.get('/postings', function(req, resp) {
-    resp.sendFile(pF + '/postings.html');
+    resp.render('blocks/postings');
 });
 
 app.get('/my-applications', function(req, resp) {
-    resp.sendFile(pF + '/my_applications.html');
+    resp.render('blocks/my-applications');
 });
 
 app.get('/my-posts', function(req, resp) {
-    resp.sendFile(pF + '/my_posts.html');
+    resp.render('blocks/my-posts');
 });
 
-app.get('/posting/:user', function(req, resp) {
-    if(req.params.user === 'interpreter') {
-        resp.sendFile(pF + '/posting-details-i.html');
-    } else if(req.params.user === 'coordinator') {
-        resp.sendFile(pF + '/posting-details-c.html');
-    }
+app.get('/posting-details', function(req, resp) {
+    resp.render('blocks/posting-details', {user: 'coordinator'})
 });
 
 app.get('/register', function(req, resp) {
-    resp.sendFile(pF + '/register.html');
+    resp.render('blocks/register');
 });
 
 app.get('/inbox', function(req, resp) {
-    resp.sendFile(pF + '/inbox.html');
+    resp.render('blocks/inbox');
 });
 
 app.get('/message', function(req, resp) {
-    resp.sendFile(pF + '/message.html');
+    resp.render('dev/message');
 });
 
 app.get('/create-post', function(req, resp) {
-    resp.sendFile(pF + '/new.html');
+    resp.render('blocks/create-post');
 });
 
 // Server listening

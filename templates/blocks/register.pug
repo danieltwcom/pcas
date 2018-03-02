@@ -6,10 +6,10 @@ append scripts
 block content
     .card.w-75.mx-auto
         .card-body
-            form.d-flex.justify-content-between.flex-wrap(action='/register', method='post')
+            form#register_from.d-flex.justify-content-between.flex-wrap(action='', method='post')
                 .form-group.w-49
                     label(for='username') Username:
-                    input.form-control(type='text', name='username')
+                    input.form-control(type='text', name='username' )
                 .form-group.w-49
                     label(for='who-are-you') Who Are You:
                     select.form-control(name='who-are-you')
@@ -53,3 +53,4 @@ block content
                 .text-right.w-100
                     input.btn.btn-primary.mr-1(type='submit', value='Register')
                     input.btn.btn-secondary(type='reset', value='Clear')
+            button#Submit.btn.btn-primary.mr-1.w-100 Register

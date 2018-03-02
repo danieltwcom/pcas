@@ -49,7 +49,6 @@ app.post("/register", function(req, resp) {
 			console.log(err)
 		} 
 		if(res.rowCount == 1){
-			console.log('test')
 			resp.send({status:"success"})	
 		}
 			
@@ -151,8 +150,4 @@ server.listen(port, function (err) {
         return false;
     }
     console.log(port + " is running");
-});
-// ---------------Test page --------------------
-app.get('/test', function(req, resp) {
-    resp.render('blocks/test');
 });

@@ -1,12 +1,7 @@
 nav.navbar.navbar-light.bg-light.mb-3
-    if session === 'interpreter'
-        include interpreter-dropdown
-    else if session === 'coordinator'
-        include coordinator-dropdown
-    else if session === 'admin'
-        include admin-dropdown
-    //- everyone else
-    else
+    if user
         include dropdown
     .mx-auto
-        h3 Post-Secondary Communications Access Services
+        h3
+            img.w-10(src='/image/bcit.svg')
+            | Post-Secondary Communications Access Services

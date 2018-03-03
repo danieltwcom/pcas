@@ -6,7 +6,8 @@ append scripts
 block content
     .card.w-25.mx-auto
         .card-body
-            .alert.alert-danger #{message}
+            if message
+                .alert.alert-danger #{message}
             form(action='/login', method='post')
                 .form-group
                     label(for='username') Username:

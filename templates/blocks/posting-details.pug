@@ -36,16 +36,16 @@ block content
                 .w-24
                     label(for='email') Phone:
                     |  (604)123-4567
+            if user.role === 'coordinator'
+                label(for='application-status') Application Status:
+                .d-flex.justify-content-around.alert.alert-info
+                    h5 Transcriber Found: 0/2
+                    h5 Interpreter Found: 0/2
             .card.mb-2
                 .card-body
                     label.d-block(for='details') Details:
                     |                             Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nulla, velit dolor! Vero iste obcaecati aspernatur aliquid odit esse delectus dolores, vel eos amet voluptate enim eius ad tempore? Unde, sunt.
-            if user === 'coordinator'
-                h3 Application Status
-                .alert.alert-info.d-flex.justify-content-around
-                    h5 Interpreters: 0/2 Found
-                    h5 Transcribers: 0/2 Found
-                hr
+            if user.role === 'coordinator'
                 h3 Applicants
                 hr
                 .applicant.border-bottom.mb-2.pb-2
@@ -93,7 +93,7 @@ block content
                     .applicant-comment
                         label(for='comment') Comment:
                         |  Lorem ipsum dolor sit amet consectetur adipisicing elit. Error fuga blanditiis perspiciatis laboriosam suscipit illum fugit impedit beatae vero unde sapiente ipsa iure, veritatis tempore debitis ea, eos officiis corrupti!
-            else if user === 'interpreter'
+            else if user.role === 'interpreter'
                 h3 Apply
                 form(action='/apply', method='post')
                     .form-group

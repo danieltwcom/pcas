@@ -12,23 +12,29 @@ block content
                     .position-relative.mb-2
                         button.btn.btn-success.position-absolute#upload-profile-pic-button(type='button')
                             i.fa.fa-plus(aria-hidden='true')
-                        img.w-75.d-block.rounded-circle.mx-auto(src='/image/profile.png')
+                        img.w-75.d-block.rounded-circle.mx-auto(src=user.avatar_url)
                     .mb-2.d-flex.justify-content-end
                         h5
                             span.badge.badge-secondary.mr-1(data-toggle='tooltip', data-placement='top', title='To become verified, you must receive enough approval from coordinators that jobs are completed') Unverified
                             span.badge.badge-secondary(data-toggle='tooltip', data-placement='top', title='Contact the administrator for more information on getting screened') Unscreened
                     .mb-2
                         label.w-35(for='name') Name:
-                        | Test User
+                        | #{user.first_name} #{user.last_name}
                     .mb-2
                         label.w-35(for='email') Email:
-                        | email@email.com
+                        | #{user.email}
                     .mb-2
                         label.w-35(for='phone') Phone #:
-                        | Not specified
+                        if user.phone_number === null
+                            | Not Specified
+                        else
+                            | #{user.phone_number}
                     .mb-2
                         label.w-35(for='location') Location:
-                        | Not specified
+                        if user.location === null
+                            | Not Specified
+                        else
+                            | #{user.location}
                     .d-flex.justify-content-end
                         button#edit-profile-button.btn.btn-primary(type='button') Edit Profile
         .col-4
@@ -62,5 +68,4 @@ block content
                     small
                         i Educations, work experiences, etc.
                     .card
-                        .card-body
-                            | Lorem ipsum dolor sit amet consectetur adipisicing elit. Enim quos ad illo delectus odit ipsam quaerat modi dolorum animi. Laudantium et nemo quisquam quia, necessitatibus impedit rerum perspiciatis veniam nobis! Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda saepe porro magni, obcaecati enim amet quis perferendis voluptatem dicta, cupiditate ipsam illum ut inventore iure sunt sint. Molestias, nisi laborum?
+                        .card-body #{user.details}

@@ -5,7 +5,10 @@
 		a.dropdown-item(href='/postings') View Postings
 		a.dropdown-item(href='/create-post') Create Post
 		a.dropdown-item(href='/my-posts') My Posts
-		a.dropdown-item(href='/my-applications') My Applications
+		if user.role === 'ti'
+			a.dropdown-item(href='/my-applications') My Applications
 		a.dropdown-item(href='/profile') My Profile
 		a.dropdown-item(href='/inbox') Messages
+		if user.role === 'admin'
+			a.dropdown-item(href='/admin') Admin
 		a.dropdown-item(href='/logout') Logout

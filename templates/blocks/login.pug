@@ -6,6 +6,8 @@ append scripts
 block content
     .card.w-25.mx-auto
         .card-body
+            if message
+                .alert.alert-danger #{message}
             form(action='/login', method='post')
                 .form-group
                     label(for='username') Username:
@@ -15,5 +17,5 @@ block content
                     input.form-control(type='password', name='password')
                     a(href='#') Forgot Password
                 .form-group.d-flex.justify-content-end
-                    input.btn.btn-primary.mr-1(type='submit', value='login')
+                    input.btn.btn-primary.mr-1(type='submit', value='Login')
                     button#registration-button.btn.btn-info(type='button') Register

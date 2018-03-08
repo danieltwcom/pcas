@@ -31,6 +31,10 @@
     width: 69%;
 }
 
+.w-66 {
+    width: 66%;
+}
+
 .w-65 {
     width: 65%;
 }
@@ -123,6 +127,10 @@
     width: 5%;
 }
 
+.mxw-15 {
+    max-width: 15%;
+}
+
 /* min width */
 .mw-50p {
     min-width: 50px;
@@ -139,6 +147,10 @@
 /* height */
 .h-20 {
     height: 20%;
+}
+
+.h-10 {
+    height: 10%;
 }
 
 /* view height and view width */

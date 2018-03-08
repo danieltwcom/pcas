@@ -5,14 +5,16 @@ append scripts
 
 block content
     .row
-        .col-4
+        .col-3
             .card
                 .card-body.bg-light
                     h3 Profile
                     .position-relative.mb-2
-                        button.btn.btn-success.position-absolute#upload-profile-pic-button(type='button')
-                            i.fa.fa-plus(aria-hidden='true')
-                        img.w-75.d-block.rounded-circle.mx-auto(src=user.avatar_url)
+                        form#upload-profile-pic.position-absolute(method='POST', action='/upload-profile-pic', enctype='multipart/form-data')
+                            input#profile-pic-input.d-none(name='profile_pic', type='file')
+                            button#upload-profile-pic-button.btn.btn-success(type='button', data-toggle='tooltip', data-placement='top', title='Consider using a perfect square image')
+                                i.fa.fa-plus(aria-hidden='true')
+                        img.w-75.d-block.rounded-circle.mx-auto(src='/files/' + user.avatar_url)
                     .mb-2.d-flex.justify-content-end
                         h5
                             span.badge.badge-secondary.mr-1(data-toggle='tooltip', data-placement='top', title='To become verified, you must receive enough approval from coordinators that jobs are completed') Unverified
@@ -61,11 +63,11 @@ block content
                         label#upload-filename.custom-file-label(for='customFile') Choose file
                         .text-right.mt-2
                             input.btn.btn-sm.btn-primary(type='submit', value='Upload')
-        .col-4
+        .col-5
             .card
                 .card-body.bg-light
                     h3.mb-0 Description
                     small
                         i Educations, work experiences, etc.
                     .card
-                        .card-body #{user.details}
+                        .card-body #{user.description}

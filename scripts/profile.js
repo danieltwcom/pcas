@@ -17,4 +17,12 @@ $(document).ready(function() {
 
         $('#upload-filename').html(filename)
     });
+
+    $('#upload-profile-pic-button').on('click', function() {
+        $('#profile-pic-input').click();
+    });
+
+    $('#profile-pic-input').on('change', function() {
+        $('#upload-profile-pic').submit();
+    });
 });

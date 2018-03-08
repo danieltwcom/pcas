@@ -103,10 +103,9 @@ $(document).ready(function() {
             url: '/new-post',
             data: $(this).serialize(),
             success: function(resp) {
-                console.log(resp);
                 if (resp.status === 'success') {
                     localStorage.clear();
-                    location.href = '/post-created'
+                    location.href = '/post-created';
                 } else if (resp.status === 'fail') {
                     alert('an error occurred');
                     window.onbeforeunload = function() {
@@ -127,6 +126,19 @@ $(document).ready(function() {
                     }
                 }
             }
-        })
-    })
+        });
+    });
+
+    $.ajax({
+        method: 'GET',
+        url: '/get-schools',
+        success: function(resp) {
+            console.log(resp);
+            for (school of resp) {
+                $('#schools').append(
+                    $('<option>').attr('value', school.name).html(school.name)
+                );
+            }
+        }
+    });
 });

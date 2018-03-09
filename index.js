@@ -70,13 +70,26 @@ app.post("/register", function(req, resp) {
     pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[req.body.username,req.body.pass,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,1,req.body.desp,req.body.otherPhone],(err,res) => {
 		console.log(err,res)
 		if(err){
-			console.log(err)
+			resp.send({status:"fail",message:"input invalid"})
 		} 
 		if(res != undefined && res.rowCount == 1){
 			resp.send({status:"success"})	
 		}
 	})
 });
+
+app.post("/duplicate_check",function(req,resp){
+    console.log(req.body)
+    pool.query('SELECT * from users where username = $1 or email = $1',[req.body.checkValue],(err,res) => {
+        console.log(err,res)
+        if(res != undefined && res.rowCount ==1){
+            resp.send({status:"fail"})
+        }
+        if(res != undefined && res.rowCount ==0){
+            resp.send({status:"success"})
+        }
+    })
+})
 
 // ------------Register End -------------------
 //-------------Login --------------------------

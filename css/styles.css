@@ -41,7 +41,7 @@ label {
     right: 40px;
 }
 
-#new-post input[type='checkbox'] {
+.form-group input[type='checkbox'], .form-inline input[type='checkbox'] {
     width: 25px;
     height: 25px;
 }

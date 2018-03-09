@@ -128,17 +128,4 @@ $(document).ready(function() {
             }
         });
     });
-
-    $.ajax({
-        method: 'GET',
-        url: '/get-schools',
-        success: function(resp) {
-            console.log(resp);
-            for (school of resp) {
-                $('#schools').append(
-                    $('<option>').attr('value', school.name).html(school.name)
-                );
-            }
-        }
-    });
 });

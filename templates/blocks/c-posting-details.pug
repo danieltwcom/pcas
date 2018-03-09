@@ -9,6 +9,9 @@ block content
             .card
                 .card-body
                     label.d-block(for='when') When:
+                    |  #{post.on_what_day.toDateString()}
+                    hr
+                    label.d-block(for='time') Time:
                     |  #{post.time}
                     hr
                     label.d-block(for='type') Service Type:
@@ -31,16 +34,18 @@ block content
                     hr
                     label.d-block(for='course-number') Course Number:
                     |  #{post.course_number}
-                    hr
-                    label.d-block(for='email') Email:
-                    a(href=post.email)  #{post.email}
-                    hr
-                    label.d-block(for='phone') Phone Number:
-                    |  #{post.phone_number}
-                    if post.other_phone
+                    if post.hide_email === false
                         hr
-                        label.d-block(for='other_phone') Alternate Phone Number:
-                        |  #{post.other_phone}
+                        label.d-block(for='email') Email:
+                        a(href=post.email)  #{post.email}
+                    if post.hide_phone === false
+                        hr
+                        label.d-block(for='phone') Phone Number:
+                        |  #{post.phone_number}
+                        if post.other_phone
+                            hr
+                            label.d-block(for='other_phone') Alternate Phone Number:
+                            |  #{post.other_phone}
         .col-9
             .card.mb-2
                 .card-body
@@ -48,7 +53,7 @@ block content
                         h3 [##{post.post_id}] #{post.title}
                         strong
                             | Posted on #{post.date_created.toDateString()} by 
-                            a(href='/profile/' + post.user_id) #{post.username}
+                            a(href='/profile?user_id=' + post.user_id) #{post.username}
                     hr
                     label.d-block(for='details') Details:
                     | #{post.detail}
@@ -57,32 +62,42 @@ block content
                     if user.role === 'coordinator'
                         h3 Applicants
                         hr
-                        each val, index in applicant
-                            .applicant.border-bottom.mb-2.pb-2
-                                .d-flex.justify-content-between.align-items-center.mx-auto
-                                    .w-5
-                                        img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
-                                    .w-75
-                                        a(href='/profile/' + applicant[index].user_id) #{applicant[index].username}
-                                        if applicant[index].is_screened
-                                            span.badge.badge-success.ml-1 Screened
-                                        else
-                                            span.badge.badge-secondary.ml-1 Unscreened
-                                        if applicant[index].verified
-                                            span.badge.badge-success.ml-1 Verified
-                                        else
-                                            span.badge.badge-secondary.ml-1 Unverified
-                                        - var upvoteNum = 0
-                                        each v, i in upvote
-                                            if upvote[i].voted_user_id === applicant[index].user_id
-                                                - upvoteNum++
-                                        span.badge.badge-primary.ml-1 +#{upvoteNum}
-                                    .w-20.text-right
-                                        button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
-                                        button.btn.btn-sm.btn-success(type='button') Accept
-                                .applicant-comment
-                                    label(for='comment') Comment:
-                                    |  #{applicant[index].comments}
+                        if applicant.length > 0
+                            each val, index in applicant
+                                .applicant.border-bottom.mb-2.pb-2
+                                    .d-flex.justify-content-between.align-items-center.mx-auto
+                                        .w-5
+                                            img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                        .w-75
+                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                            if applicant[index].is_screened
+                                                span.badge.badge-success.ml-1 Screened
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unscreened
+                                            if applicant[index].verified
+                                                span.badge.badge-success.ml-1 Verified
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unverified
+                                            - var upvoteNum = 0
+                                            each v, i in upvote
+                                                if upvote[i].voted_user_id === applicant[index].user_id
+                                                    - upvoteNum++
+                                            span.badge.badge-primary.ml-1 +#{upvoteNum}
+                                        .w-20.d-flex.justify-content-end
+                                            button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
+                                            if applicant[index].accepted === false
+                                                form.accept-applicant(method='POST', action='/accept-applicant')
+                                                    input(type='hidden', name='application_id', value=applicant[index].application_id)
+                                                    input(type='hidden', name='user_id', value=applicant[index].user_id)
+                                                    input.btn.btn-success.btn-sm(type='submit', value='Accept')
+                                            else
+                                                button.btn.btn-sm.btn-success.disabled(type='button') Accepted
+                                    .applicant-comment
+                                        label(for='comment') Comment:
+                                        |  #{applicant[index].comments}
+                        else
+                            .alert.alert-info.text-center
+                                h4 There are no applicants
                     else if user.role === 'ti'
                         h3 Apply
                         - var applied = false
@@ -100,7 +115,7 @@ block content
                                     input.btn.btn-secondary(type='reset', value='Clear')
                         else
                             .alert.alert-info.text-center
-                                h4 You've already applied to this post
+                                h4 You applied to this post
     //--.card
         .card-body.bg-light
             .d-flex.justify-content-between.flex-wrap

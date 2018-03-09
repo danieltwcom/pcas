@@ -39,7 +39,7 @@ block content
                                     if tNum > 0
                                         span.badge.badge-primary.mr-1 Transcriber(s)
                                 .w-35
-                                    a(href='/posting-details/coord/' + coord_postings[index].post_id) [##{coord_postings[index].post_id}] #{coord_postings[index].title}
+                                    a(href='/posting-details?post_id=' + coord_postings[index].post_id + '&role=' + coord_postings[index].role) [##{coord_postings[index].post_id}] #{coord_postings[index].title}
                                 .w-15 #{coord_postings[index].date_created.toDateString()}
                                 .w-25 #{coord_postings[index].school}
         .tab-pane.fade#work(role='tabpanel', arialabelledby='work-tab')
@@ -59,7 +59,7 @@ block content
                             - var daysArray = ti_postings[index].days_available.split(', ')
                             .d-flex.justify-content-between.mb-2
                                 .w-35
-                                    a(href='/post-details/ti/' + ti_postings[index].post_id) [##{ti_postings[index].post_id}] #{ti_postings[index].title}
+                                    a(href='/posting-details?post_id=' + ti_postings[index].post_id + '&role=' + ti_postings[index].role) [##{ti_postings[index].post_id}] #{ti_postings[index].title}
                                 .w-35
                                     - var mon = daysArray.indexOf('Mon')
                                     - var tue = daysArray.indexOf('Tue')
@@ -84,4 +84,4 @@ block content
                                         span.badge.badge-primary.mr-1 Sunday
                                 .w-15 #{ti_postings[index].starting.toDateString()}
                                 .w-15
-                                    a(href='/profile/' + ti_postings[index].user_id) #{ti_postings[index].username}
+                                    a(href='/profile?user_id=' + ti_postings[index].user_id) #{ti_postings[index].username}

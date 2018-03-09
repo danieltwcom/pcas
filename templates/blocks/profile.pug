@@ -7,7 +7,7 @@ block content
     .row
         .col-3
             .card
-                .card-body.bg-light
+                .card-body
                     h3 Profile
                     .position-relative.mb-2
                         form#upload-profile-pic.position-absolute(method='POST', action='/upload-profile-pic', enctype='multipart/form-data')
@@ -22,15 +22,21 @@ block content
                     .mb-2
                         label.w-35(for='name') Name:
                         | #{user.first_name} #{user.last_name}
-                    .mb-2
-                        label.w-35(for='email') Email:
-                        | #{user.email}
-                    .mb-2
-                        label.w-35(for='phone') Phone #:
-                        if user.phone_number === null
-                            | Not Specified
-                        else
-                            | #{user.phone_number}
+                        if user.hide_email === false
+                            .mb-2
+                                label.w-35(for='email') Email:
+                                a(href='mailto:' + user.email) #{user.email}
+                        if user.hide_phone === false
+                            .mb-2
+                                label.w-35(for='phone') Phone #:
+                                if user.phone_number === null
+                                    | Not Specified
+                                else
+                                    | #{user.phone_number}
+                            if user.other_phone
+                                .mb-2
+                                    label.w-35(for='other_phone') Other Phone #:
+                                    |  #{user.other_phone}
                     .mb-2
                         label.w-35(for='location') Location:
                         if user.location === null
@@ -38,11 +44,11 @@ block content
                         else
                             | #{user.location}
                     .d-flex.justify-content-end
-                        button#edit-profile-button.btn.btn-primary(type='button') Edit Profile
+                        button#edit-profile-button.btn.btn-primary.btn-sm(type='button') Edit Profile
         .col-4
             #credentials.card.mb-3
-                .card-body.bg-light
-                    h3.mb-0 Credentials
+                .card-body
+                    h3 Credentials
                     small
                         i Certificates, licenses, etc.
                     form.delete-credential(action='/delete-credential', method='post')
@@ -64,9 +70,35 @@ block content
                         .text-right.mt-2
                             input.btn.btn-sm.btn-primary(type='submit', value='Upload')
         .col-5
+            .card.mb-3
+                .card-body
+                    h3 Options
+                    form#options(method='POST', action='/apply-options')
+                        input(type='hidden', name='user_id', value=user.user_id)
+                        .form-inline.justify-content-between
+                            .form-inline
+                                if user.hide_email
+                                    input#hide-email.form-control.mr-1(type='checkbox', name='hide_email', checked)
+                                else
+                                    input#hide-email.form-control.mr-1(type='checkbox', name='hide_email')
+                                label(for='hide_email') Hide Email
+                            .form-inline
+                                if user.hide_phone
+                                    input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone', checked)
+                                else
+                                    input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone')
+                                label(for='hide_phone') Hide Phone
+                            .form-inline
+                                if user.email_notification
+                                    input#email-notification.form-control(type='checkbox', name='email_notification', checked)
+                                else
+                                    input#email-notification.form-control(type='checkbox', name='email_notification')
+                                label(for='email_notification') Email Notification
+                        .text-right
+                            input.btn.btn-primary.btn-sm(type='submit', value='Apply')
             .card
-                .card-body.bg-light
-                    h3.mb-0 Description
+                .card-body
+                    h3 Description
                     small
                         i Educations, work experiences, etc.
                     .card

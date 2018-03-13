@@ -17,6 +17,8 @@ $(document).ready(function() {
 	var nameRegex = /^[a-zA-Z]{1,15}$/;
 	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 	var passwordRegex = /^[^ \s]{4,15}$/;
+	var phoneRegex = /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
+
     var checkDic = {
                     "username":0,
 				   "first_name":0,
@@ -76,6 +78,13 @@ $(document).ready(function() {
 			confirm_password.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
 		}
 	};
+	phone.onkeyup = function(){
+		regexTest(phone,"phone",phoneRegex)
+	}
+	
+	altPhone.onkeyup = function(){
+		regexTest(altPhone,"altPhone",phoneRegex)
+	}
 //------------Regex check end -----------//
     
 //-------------    duplicate check ----------// 

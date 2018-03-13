@@ -61,21 +61,26 @@ var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
 var stringRegex = /^[a-zA-Z0-9\-_]{1,15}$/;
 var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 var passwordRegex = /^[^ \s]{4,15}$/;
+var phoneRegex = /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
 // -----------Regex format end -------------------
 
 
 // -----------Register ---------------------------
 app.post("/register", function(req, resp) {
 	console.log(req.body)
-    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[req.body.username,req.body.pass,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,1,req.body.desp,req.body.otherPhone],(err,res) => {
-		console.log(err,res)
-		if(err){
-			resp.send({status:"fail",message:"input invalid"})
-		} 
-		if(res != undefined && res.rowCount == 1){
-			resp.send({status:"success"})	
-		}
-	})
+    if (stringRegex.test(req.body.username) && stringRegex.test(req.body.fname)&& stringRegex.test(req.body.lname) && passwordRegex.test(req.body.pass) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.otherPhone) ){
+        pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[req.body.username,req.body.pass,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,1,req.body.desp,req.body.otherPhone],(err,res) => {
+    		console.log(err,res)
+    		if(err){
+    			resp.send({status:"fail",message:"input invalid"})
+    		} 
+    		if(res != undefined && res.rowCount == 1){
+    			resp.send({status:"success"})	
+    		}
+    	})
+    } else {
+        resp.send({status:'fail',message:"input invalid"})
+    }
 });
 
 app.post("/duplicate_check",function(req,resp){
@@ -95,19 +100,26 @@ app.post("/duplicate_check",function(req,resp){
 //-------------Login --------------------------
 app.post("/login", function(req, resp) {
     console.log(req.body)
-	pool.query('SELECT * FROM users WHERE username = $1 and password = $2',[req.body.username,req.body.password],(err,res) => {
-		console.log(err,res)
-		if (res != undefined && res.rows.length > 0){
-			
-			if(res.rows[0].is_verified == 1){
-                req.session = res.rows[0];
-                console.log(req.session);
-                resp.redirect('/postings');
-			} else {
-				resp.render('blocks/login',{message:"Your account is not verified"})
-			}
-		}
-	})
+    console.log(stringRegex.test(req.body.username))
+    console.log(passwordRegex.test(req.body.password))
+    if(stringRegex.test(req.body.username) && passwordRegex.test(req.body.password)){
+    	pool.query('SELECT * FROM users WHERE username = $1 and password = $2',[req.body.username,req.body.password],(err,res) => {
+    		if (res != undefined && res.rows.length > 0){
+    			
+    			if(res.rows[0].is_verified == 1){
+                    req.session = res.rows[0];
+                    console.log(req.session);
+                    resp.redirect('/postings');
+    			} else {
+    				resp.render('blocks/login',{message:"Your account is not verified"})
+    			}
+    		} else {
+                resp.render('blocks/login',{message:"Wrong username or password"})
+            }
+    	})
+    } else {
+        resp.render('blocks/login',{message:"Wrong username or password"})
+    }
 });
 //-------------Login End ----------------------
 

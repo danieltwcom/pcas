@@ -15,9 +15,9 @@ $(document).ready(function() {
 	
 	var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
 	var nameRegex = /^[a-zA-Z]{1,15}$/;
-	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
+	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$|^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 	var passwordRegex = /^[^ \s]{4,15}$/;
-	var phoneRegex = /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
+	var phoneRegex = /^$|^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
 
     var checkDic = {
                     "username":0,
@@ -32,7 +32,6 @@ $(document).ready(function() {
 //----------- Regex check -----------------//
 	username.onkeyup = function(){
 		regexTest(username,"username",usernameRegex)
-     
 	}; 
     
 	first_name.onkeyup = function(){
@@ -144,7 +143,7 @@ $(document).ready(function() {
             
         }
         if(emailRegex.test(email.value)== false){
-            $("#email")[0].innerHTML="&nbsp &nbsp e invalid"
+            $("#email")[0].innerHTML="&nbsp &nbsp Email invalid"
             $("#email")[0].style.color='red'
             
         }
@@ -152,6 +151,7 @@ $(document).ready(function() {
     }
 	
 //-------------    duplicate check end ----------// 
+//------------- Submit -------------------------//
 	
 
 	 $("form").submit(function(e){
@@ -182,7 +182,7 @@ $(document).ready(function() {
             },
             success:function(resp) {
                 if(resp.status=="success"){
-                    location.href = '/';
+                    location.href = '/pleaseVerify';
                 }
                 if(resp.status=="fail"){
                     alert(resp.message)
@@ -196,7 +196,9 @@ $(document).ready(function() {
 //--------------   Functions -------------------//
 	
 	function regexTest (variable,variableName,regex){
+		console.log(regex.test(variable.value))
         if(regex.test(variable.value)){
+
             variable.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
             checkDic[variableName] = 1;
             

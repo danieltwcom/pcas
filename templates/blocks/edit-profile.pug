@@ -11,42 +11,43 @@ block content
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label(for='first-name') First Name:
-                        input.form-control(type='text', name='first_name')
+                        input#first_name.form-control(type='text', name='first_name',value=user.first_name)
                     .form-group.w-45
                         label(for='last-name') Last Name:
-                        input.form-control(type='text', name='last_name')
+                        input#last_name.form-control(type='text', name='last_name',value = user.last_name)
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label(for='phone') School:
-                        select.form-control(name='school')
+                        select#school.form-control(name='school')
                             option(value='uvic') University of Victoria
                             option(value='sfu') Simon Fraser University
                             option(value='ubc') University of British Columbia
                             option(value='bcit') BCIT
                     .form-group.w-45
                         label(for='location') Location:
-                        input.form-control(type='text', name='location')
+                        input#location.form-control(type='text', name='location',value = user.location)
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label(for='phone') Primary Phone #:
-                        input.form-control(type='text', name='phone')
+                        input#phone.form-control(type='text', name='phone',value = user.phone_number)
                     .form-group.w-45
                         label(for='other-phone') Secondary Phone #:
-                        input.form-control(type='text', name='other-phone')
+                        input#other_phone.form-control(type='text', name='other_phone',value = user.other_phone)
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label.mr-2(for='age') Age:
-                        input.form-control(type='number', name='age')
+                        input#age.form-control(type='number', name='age',value=user.age)
                     .form-group.w-45
                         label.mr-2(for='gender') Gender:
-                        select.form-control(name='gender')
+                        select#gender.form-control(name='gender',value=user.gender)
+                            option
                             option(value='male') Male
                             option(value='female') Female
                 .form-group
                     label(for='profile-description') Description:
-                    textarea.form-control.w-100(name='profile_description', rows='10')
+                    textarea#desc.form-control.w-100(name='profile_description', rows='10',value=user.description)
                 .text-right
-                    input.btn.btn-primary.mr-1(type='submit', value='Update')
+                    input#update_profile.btn.btn-primary.mr-1(type='submit', value='Update')
                     input.btn.btn-secondary(type='reset', value='Clear')
     h3 Change Email
     .card.mb-3
@@ -55,12 +56,12 @@ block content
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label(for='email') New Email:
-                        input.form-control(type='email', name='email')
+                        input#email.form-control(type='email', name='email')
                     .form-group.w-45
                         label(for='confirm-email') Confirm Email:
-                        input.form-control(type='email', name='confirm_email')
+                        input#confirm_email.form-control(type='email', name='confirm_email')
                 .text-right
-                    input.btn.btn-primary(type='submit', value='Update')
+                    input#update_email.btn.btn-primary(type='submit', value='Update')
     h3 Change Password
     .card
         .card-body.bg-light
@@ -68,12 +69,12 @@ block content
                 .d-flex.justify-content-between
                     .form-group.w-33
                         label(for='current-password') Current Password:
-                        input.form-control(type='password', name='current_password')
+                        input#current_password.form-control(type='password', name='current_password')
                     .form-group.w-33
                         label(for='new-password') New Password:
-                        input.form-control(type='password', name='new_password')
+                        input#newpassword.form-control(type='password', name='new_password')
                     .form-group.w-33
                         label(for='confirm-password') Confirm Password:
-                        input.form-control(type='password', name='confirm_password')
+                        input#confirm_password.form-control(type='password', name='confirm_password')
                 .text-right
-                    input.btn.btn-primary(type='submit', value='Update')
+                    input#update_pass.btn.btn-primary(type='submit', value='Update')

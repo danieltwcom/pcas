@@ -17,7 +17,14 @@ block content
                         img.w-75.d-block.rounded-circle.mx-auto(src='/files/' + user.avatar_url)
                     .mb-2.d-flex.justify-content-end
                         h5
-                            span.badge.badge-secondary.mr-1(data-toggle='tooltip', data-placement='top', title='To become verified, you must receive enough approval from coordinators that jobs are completed') Unverified
+                            - var upvoteNum = 0
+                            each v, i in upvotes
+                                if user.user_id === upvotes[i].voted_user_id
+                                    - upvoteNum++
+                            if upvoteNum > 4
+                                span.badge.badge-success.mr-1(data-toggle='tooltip', data-placement='top', title='This user is reputable amongst the community') Verified
+                            else
+                                span.badge.badge-secondary.mr-1(data-toggle='tooltip', data-placement='top', title='To become verified, you must receive enough approval from coordinators that jobs are completed') Unverified
                             span.badge.badge-secondary(data-toggle='tooltip', data-placement='top', title='Contact the administrator for more information on getting screened') Unscreened
                     .mb-2
                         label.w-35(for='name') Name:

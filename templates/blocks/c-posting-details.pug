@@ -28,9 +28,9 @@ block content
                     hr
                     label.d-block(for='looking-for') Looking For:
                     if parseInt(post.num_of_interpreter) > 0
-                        span.badge.badge-primary.mr-1 Interpreter
+                        span.badge.badge-primary.mr-1 #{post.num_of_interpreter}x Interpreter(s)
                     if parseInt(post.num_of_transcriber) > 0
-                        span.badge.badge-primary.mr-1 Transcriber
+                        span.badge.badge-primary.mr-1 #{post.num_of_transcriber}x Transcriber(s)
                     hr
                     label.d-block(for='course-number') Course Number:
                     |  #{post.course_number}
@@ -50,16 +50,30 @@ block content
             .card.mb-2
                 .card-body
                     .d-flex.justify-content-between.align-items-center
+                        - var acceptedNum = 0
+                        each v, i in applicant
+                            if applicant[i].accepted === true
+                                - acceptedNum++
                         h3 [##{post.post_id}] #{post.title}
+                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber))
+                                span.badge.badge-primary.ml-1 Fulfilled
+                            else
+                                span.badge.badge-success.ml-1 Open
                         strong
                             | Posted on #{post.date_created.toDateString()} by 
                             a(href='/profile?user_id=' + post.user_id) #{post.username}
+                            - var coordinatorUpvoteNum = 0
+                            each v, i in upvote
+                                if upvote[i].voted_user_id === post.user_id
+                                    - coordinatorUpvoteNum++
+                            span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
                     hr
                     label.d-block(for='details') Details:
                     | #{post.detail}
-            .card
-                .card-body
-                    if user.role === 'coordinator'
+            
+            if user.role === 'coordinator'
+                .card
+                    .card-body
                         h3 Applicants
                         hr
                         if applicant.length > 0
@@ -78,41 +92,60 @@ block content
                                                 span.badge.badge-success.ml-1 Verified
                                             else
                                                 span.badge.badge-secondary.ml-1 Unverified
-                                            - var upvoteNum = 0
+                                            - var applicantUpvoteNum = 0
                                             each v, i in upvote
                                                 if upvote[i].voted_user_id === applicant[index].user_id
-                                                    - upvoteNum++
-                                            span.badge.badge-primary.ml-1 +#{upvoteNum}
+                                                    - applicantUpvoteNum++
+                                            span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
                                         .w-20.d-flex.justify-content-end
+                                            if applicant[index].accepted === true && post.progress === 'Complete' && applicant[index].ti_upvoted === false
+                                                form.application-upvote.mr-1(method='POST', action='/application/upvote')
+                                                    input(type='hidden', name='id', value=applicant[index].application_id)
+                                                    input(type='hidden', name='voter_id', value=applicant[index].user_id)
+                                                    input(type='hidden', name='voted_user_id', value=applicant[index].applicant_id)
+                                                    input.btn.btn-info.btn-sm(type='submit', value='Upvote User')
                                             button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
                                             if applicant[index].accepted === false
                                                 form.accept-applicant(method='POST', action='/accept-applicant')
                                                     input(type='hidden', name='application_id', value=applicant[index].application_id)
+                                                    input(type='hidden', name='post_id', value=applicant[index].post_id)
                                                     input(type='hidden', name='user_id', value=applicant[index].user_id)
                                                     input.btn.btn-success.btn-sm(type='submit', value='Accept')
                                             else
-                                                button.btn.btn-sm.btn-success.disabled(type='button') Accepted
+                                                button.btn.btn-sm.btn-success(type='button', disabled) Accepted
+                                                //--form.revoke-applicant(method='POST', action='/revoke-applicant')
+                                                    input(type='hidden', name='application_id', value=applicant[index].application_id)
+                                                    input(type='hidden', name='post_id', value=applicant[index].post_id)
+                                                    input(type='hidden', name='user_id', value=applicant[index].user_id)
+                                                    input.btn.btn-danger.btn-sm(type='submit', value='Revoke')
                                     .applicant-comment
                                         label(for='comment') Comment:
                                         |  #{applicant[index].comments}
                         else
                             .alert.alert-info.text-center
                                 h4 There are no applicants
-                    else if user.role === 'ti'
+            else if user.role === 'ti'
+                .card
+                    .card-body
                         h3 Apply
+                        hr
                         - var applied = false
                         each val, index in applicant
                             if applicant[index].user_id === user.user_id
                                 - applied = true
                         if !applied
-                            form(action='/apply', method='post')
-                                input(type='hidden', name='post_id', value=post.post_id)
-                                input(type='hidden', name='user_id', value=user.user_id)
-                                .form-group
-                                    input.form-control(type='text', name='comment', maxlength='100', placeholder='Enter any comments here')
-                                .form-group.text-right
-                                    input.btn.btn-primary.mr-1(type='submit', value='Apply')
-                                    input.btn.btn-secondary(type='reset', value='Clear')
+                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber))
+                                .alert.alert-info.text-center
+                                    h4 The number of applicants have been fulfilled
+                            else
+                                form(action='/apply', method='post')
+                                    input(type='hidden', name='post_id', value=post.post_id)
+                                    input(type='hidden', name='user_id', value=user.user_id)
+                                    .form-group
+                                        input.form-control(type='text', name='comment', maxlength='100', placeholder='Enter any comments here')
+                                    .form-group.text-right
+                                        input.btn.btn-primary.mr-1(type='submit', value='Apply')
+                                        input.btn.btn-secondary(type='reset', value='Clear')
                         else
                             .alert.alert-info.text-center
                                 h4 You applied to this post

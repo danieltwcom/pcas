@@ -4,7 +4,9 @@ nav.navbar.navbar-light.bg-light.mb-3
     .mx-auto
         h3
             img.w-10(src='/image/bcit.svg')
-            | Post-Secondary Communications Access Services
+            | Post-Secondary Communications Access Services 
+            if user
+                | #{user.user_id}
     //-- .d-flex.w-20.align-items-center.border.p-2.rounded
         img.rounded-circle.w-25.h-25.mr-1(src='/files/' + user.avatar_url)
         div

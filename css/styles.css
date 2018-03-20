@@ -23,6 +23,10 @@ label {
     font-weight: bold;
 }
 
+.fa-input {
+    font-family: FontAwesome, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 /* top bar */
 .top-bar {
     width: 100%;

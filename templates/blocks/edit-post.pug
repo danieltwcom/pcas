@@ -22,7 +22,7 @@ block content
                     .form-group.d-flex.justify-content-between
                         .w-49
                             label(for='when') When:
-                            - var dayString = convertDate(post.on_what_day)
+                            - var dayString = convertDate(post.on_what_day, false)
                             input.form-control(type='date', name='when', value=dayString)
                         .w-49
                             label(for='time') Time:
@@ -81,7 +81,7 @@ block content
                     .d-flex.justify-content-between
                         .form-group.w-49
                             label(for='starting') Starting:
-                            - var dateString = convertDate(post.starting)
+                            - var dateString = convertDate(post.starting, false)
                             input.form-control(type='date', name='starting', value=dateString)
                         .form-group.w-49
                             label(for='recurring') Recurring:

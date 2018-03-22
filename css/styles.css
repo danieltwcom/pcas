@@ -3,13 +3,12 @@
 
 
 /* global */
-html {
-    height: 100vh;
+html, body {
+    min-height: 100%;
 }
 
 body {
-    min-height: 100vh;
-    margin: 0px 0px 20px 0px;
+    margin: 0px 0px 0px 0px;
     font-size: 16px;
     background-color: rgb(175, 225, 255);
 }
@@ -35,6 +34,11 @@ label {
     border-bottom: 1px solid rgb(100, 100, 100);
 }
 
+/* main */
+#main {
+    min-height: 100vh;
+}
+
 /* profile.html */
 #profile-description {
     resize: none;
@@ -55,7 +59,18 @@ label {
     width: 100%;
 }
 
+#profile-pic-div {
+    width: 300px;
+    height: 300px;
+    border-radius: 100%;
+}
+
 /* posting-details.html */
 .applicant-comment, .applicant-comment label {
     font-size: 14px;
+}
+
+/* footer */
+#footer {
+    height: 50px;
 }

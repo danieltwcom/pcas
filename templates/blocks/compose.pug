@@ -1,11 +1,12 @@
 extends ../layout
 
 append scripts
-    script(src='/scripts/message')
+    script(src='/scripts/compose.js')
 
 block content
     h3 Message
-    form(action='/message/reply/101', method='post')
+    form.send-message(action='/send-message', method='post')
+        input(type='hidden', name='sender', value=user.username)
         .card
             .card-header
                 div
@@ -16,7 +17,7 @@ block content
                     input.form-control(type='text', name='subject')
             .card-body
                 label(for='message') Message:
-                textarea.form-control.w-100(name='message', rows='10')
+                textarea.form-control.w-100#message(name='message', rows='10')
             .card-footer.text-right
                 input.btn.btn-primary.mr-1(type='submit', value='Send')
                 input.btn.btn-secondary(type='reset', value='Clear')

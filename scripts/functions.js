@@ -55,12 +55,9 @@ function acceptApplicant(form) {
         data: form.serialize(),
         success: function(resp) {
             if (resp.status === 'success') {
-                $(form).find('input').remove();
+                $(form).find('input[type=hidden]').remove();
                 $(form).removeAttr('class method action');
-                $(form).off('submit');
-                $(form).append(
-                    $('<button>').addClass('btn btn-sm btn-success').attr('disabled').html('Accepted')
-                );
+                $(form).find('input[type=submit]').attr({'disabled': 'disabled', 'value': 'Accepted'});
                 /* $(form).removeClass('accept-applicant').addClass('revoke-applicant').attr('action', '/revoke-applicant');
                 $(form).find('input[type=submit]').removeClass('btn-success').addClass('btn-danger').attr('value', 'Revoke');
                 $(form).off('submit');
@@ -99,6 +96,20 @@ function revokeApplicant(form) {
                 });
             }  else if (resp.status === 'fail') {
                 alertify.alert('An error occurred. Please contact the administrator.');
+            }
+        }
+    });
+}
+
+function jobComplete(form) {
+    $.ajax({
+        method: 'POST',
+        url: '/job/complete',
+        data: form.serialize(),
+        success: function(resp) {
+            if (resp.status === 'success') {
+                $(form).find('input').remove();
+                $(form).find('.status').removeClass('badge-warning').addClass('badge-success').html('Complete');
             }
         }
     });

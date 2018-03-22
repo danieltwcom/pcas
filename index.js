@@ -141,10 +141,10 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE status = true AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
             if (err) { console.log(err); }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE status = true ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
                 if (err) { console.log(err); }
 
                 let coord_postings = c_result.rows;
@@ -204,6 +204,7 @@ app.get('/posting-details', function(req, resp) {
     
                 if (result !== undefined && result.rows.length > 0) {
                     var coordPosting = result.rows[0];
+                    console.log(coordPosting);
     
                     pool.query('SELECT * FROM applicants JOIN users ON users.user_id = applicants.applicant_id WHERE applicants.post_id = $1 ORDER BY users.username', [postId], function(err, result) {
                         if (err) { console.log(err); }
@@ -249,18 +250,38 @@ app.get('/register', function(req, resp) {
     }
 });
 
-app.get('/inbox', function(req, resp) {
+app.get('/messages', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/inbox', {user: req.session});
+        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            var outbox = result.rows;
+
+            pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+                if (err) { console.log(err); }
+
+                var inbox = result.rows;
+
+                resp.render('blocks/messages', {user: req.session, outbox: outbox, inbox: inbox});
+            });
+        });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
 });
 
 
-app.get('/message', function(req, resp) {
+app.get('/compose', function(req, resp) {
     if (req.session.username) {
-        resp.render('dev/message', {user: req.session});
+        resp.render('blocks/compose', {user: req.session});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
+
+app.get('/message-details', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/message-details', {user: req.session});
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -293,7 +314,15 @@ app.get('/edit-post', function(req, resp) {
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
-})
+});
+
+app.get('/sent', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/message-sent', {message: 'Message has been sent'});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
 
 //--- Non-Routes
 app.get('/get-schools', function(req, resp) {
@@ -319,14 +348,6 @@ app.get('/select-school', function(req, resp) {
 });
 //--- End Non-Routes
 
-app.get('/post-created', function(req, resp) {
-    if (req.session.username) {
-        resp.render('blocks/post-created', {message: 'Post successfully created'});
-    } else {
-        resp.render('blocks/login', {message: "You're not logged in"});
-    }
-});
-
 app.post('/upload-profile-pic', function(req, resp) {
     let uploadProfilePic = upload.single('profile_pic');
 
@@ -346,7 +367,7 @@ app.post('/upload-profile-pic', function(req, resp) {
                 if (err) { console.log(err); }
                 
                 req.session.avatar_url = result.rows[0].avatar_url;
-                resp.redirect('/profile');
+                resp.redirect('/profile?user_id=' + req.session.user_id);
             })
         } else {
             resp.send({status: 'invalid file type'});
@@ -487,9 +508,9 @@ app.post('/accept-applicant', function(req, resp) {
 app.post('/activate-post', function(req, resp) {
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'UPDATE coord_postings SET status = true WHERE post_id = $1';
+            var queryString = 'UPDATE coord_postings SET is_hidden = false WHERE post_id = $1';
         } else if (req.session.role === 'ti') {
-            var queryString = 'UPDATE ti_postings SET status = true WHERE post_id = $1';
+            var queryString = 'UPDATE ti_postings SET is_hidden = false WHERE post_id = $1';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -506,9 +527,9 @@ app.post('/activate-post', function(req, resp) {
 app.post('/deactivate-post', function(req, resp) {
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'UPDATE coord_postings SET status = false WHERE post_id = $1';
+            var queryString = 'UPDATE coord_postings SET is_hidden = true WHERE post_id = $1';
         } else if (req.session.role === 'ti') {
-            var queryString = 'UPDATE ti_postings SET status = false WHERE post_id = $1';
+            var queryString = 'UPDATE ti_postings SET is_hidden = true WHERE post_id = $1';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -523,11 +544,12 @@ app.post('/deactivate-post', function(req, resp) {
 });
 
 app.post('/delete-post', function(req, resp) {
+    console.log(req.body);
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1';
+            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1 RETURNING post_id';
         } else if (req.session.role === 'ti') {
-            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1';
+            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1 RETURNING post_id';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -535,7 +557,7 @@ app.post('/delete-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                resp.send({status: 'success'});
+                resp.send({status: 'success', id: result.rows[0].post_id});
             }
         });
     }
@@ -617,6 +639,19 @@ app.post('/application/:status', function(req, resp) {
     }
 });
 
+app.post('/send-message', function(req, resp) {
+    if (req.session.username) {
+        pool.query('INSERT INTO messages (sender, subject, message, recipient) VALUES ($1, $2, $3, $4)', [req.body.sender, req.body.subject, req.body.message, req.body.recipient], function(err, result) {
+            if (err) {
+                console.log(err);
+                resp.send({status: 'fail'});
+            } if (result !== undefined && result.rowCount > 0) {
+                resp.send({status: 'success'});
+            }
+        });
+    }
+});
+
 app.post('/revoke-applicant', function(req, resp) {
     if (req.session.username) {
         pool.query('UPDATE applicants SET accepted = false WHERE application_id = $1', [req.body.application_id], function(err, result) {
@@ -627,6 +662,30 @@ app.post('/revoke-applicant', function(req, resp) {
                 resp.send({status: 'success'});
             }
         });
+    }
+});
+
+app.post('/job/start', function(req, resp) {
+    if (req.session.username) {
+        if (req.session.role === 'coordinator') {
+            pool.query('SELECT * FROM applicants WHERE post_id = $1 AND accepted = true', [req.body.post_id], function(err, result) {
+                if (err) { console.log(err) }
+                console.log(result);
+
+                if (result !== undefined && result.rows.length === 0) {
+                    resp.send({status: 'empty'});
+                } else {
+                    pool.query("UPDATE coord_postings SET progress = 'In Progress' WHERE post_id = $1", [req.body.post_id], function(err, result) {
+                        if (err) {
+                            console.log(err);
+                            resp.send({status: 'fail'});
+                        } else if (result !== undefined && result.rowCount > 0) {
+                            resp.send({status: 'success'});
+                        }
+                    });
+                }
+            });
+        }
     }
 });
 
@@ -673,7 +732,7 @@ app.post('/new-post', function(req, resp) {
             var isScreened = false;
         }
 
-        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, hideEmail, hidePhone], function(err, result) {
+        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day, course_number, time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, req.body.course_number, req.body.time], function(err, result) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});

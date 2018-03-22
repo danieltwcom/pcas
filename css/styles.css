@@ -23,6 +23,10 @@ label {
     font-weight: bold;
 }
 
+.fa-input {
+    font-family: FontAwesome, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 /* top bar */
 .top-bar {
     width: 100%;
@@ -41,7 +45,7 @@ label {
     right: 40px;
 }
 
-#new-post input[type='checkbox'] {
+.form-group input[type='checkbox'], .form-inline input[type='checkbox'] {
     width: 25px;
     height: 25px;
 }

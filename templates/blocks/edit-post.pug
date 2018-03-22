@@ -1,0 +1,162 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/edit-post.js')
+
+block content
+    h3 Edit Post
+    if user.role === 'coordinator'
+        .card
+            .card-body
+                form.edit-post(method='POST', action='/submit-edit-post')
+                    input(type='hidden', name='post_id', value=post.post_id)
+                
+                    .form-group.d-flex.justify-content-between
+                        .w-49
+                            label(for='title') Title:
+                            input.form-control(type='text', name='title', value=post.title)
+                        .w-49
+                            label(for='school') School:
+                            select#schools.form-control(name='school', value=post.school)
+                                option
+                    .form-group.d-flex.justify-content-between
+                        .w-49
+                            label(for='when') When:
+                            - var dayString = convertDate(post.on_what_day)
+                            input.form-control(type='date', name='when', value=dayString)
+                        .w-49
+                            label(for='time') Time:
+                            input.form-control(type='text', name='time', value=post.time, placeholder='e.g 3:00 PM - 4:00 PM')
+                    .form-group.d-flex.justify-content-between
+                        .w-49
+                            label(for='num_of_interpreter') How many interpreter?
+                            input.form-control(type='number', name='num_of_interpreter', value=post.num_of_interpreter)
+                        .w-49
+                            label(for='num_of_transcriber') How many transcriber?
+                            input.form-control(type='number', name='num_of_transcriber', value=post.num_of_transcriber)
+                    .form-group.d-flex.justify-content-between
+                        .w-49
+                            label(for='course_number') Course Number:
+                            input.form-control(type='text', name='course_number', value=post.course_number)
+                        .w-49
+                            label(for='type') Type of Service:
+                            select.form-control(name='type')
+                                option(value='In Person') In Person
+                                option(value='Online (Video)') Online (Video)
+                                option(value='Over the Phone') Over the Phone
+                                option(value='Other (Please specify)') Other (Please specify)
+                    .form-group.d-flex.justify-content-between
+                        .w-49
+                            label.d-block(for='preferred') Preferred:
+                            .form-inline
+                                .form-inline
+                                    if post.screened
+                                        input.form-control.mr-1(type='checkbox', name='screened', checked)
+                                    else
+                                        input.form-control.mr-1(type='checkbox', name='screened')
+                                    label.mr-3(for='screened') Screened
+                                .form-inline
+                                    if post.verified
+                                        input.form-control.mr-1(type='checkbox', name='verified', checked)
+                                    else
+                                        input.form-control.mr-1(type='checkbox', name='verified')
+                                    label(for='verified') Verified
+                    .form-group
+                        textarea.w-100.form-control(name='details', rows='6') #{post.detail}
+                    .text-right
+                        input.btn.btn-primary.mr-1(type='submit', value='Submit')
+                        button.btn.btn-secondary(type='button', onclick='window.history.go(-1)') Cancel
+    if user.role === 'ti'
+        .card
+            .card-body
+                form(method='POST', action='/submit-edit-post')
+                    input(type='hidden', name='post_id', value=post.post_id)
+                    .d-flex.justify-content-between
+                        .form-group.w-49
+                            label(for='title') Title:
+                            input.form-control(type='text', name='title', value=post.title)
+                        .form-group.w-49
+                            label(for='time') Time Available:
+                            input.form-control(type='text', name='time', value=post.time_available)
+                    .d-flex.justify-content-between
+                        .form-group.w-49
+                            label(for='starting') Starting:
+                            - var dateString = convertDate(post.starting)
+                            input.form-control(type='date', name='starting', value=dateString)
+                        .form-group.w-49
+                            label(for='recurring') Recurring:
+                            input.form-control(type='text', name='recurring', value=post.recurring)
+                    .d-flex.justify-content-between
+                        .form-group.w-49
+                            label.d-block(for='days') Days Available:
+                            - var daysArray = post.days_available.split(', ')
+                            - var mon = daysArray.indexOf('Mon')
+                            - var tue = daysArray.indexOf('Tue')
+                            - var wed = daysArray.indexOf('Wed')
+                            - var thu = daysArray.indexOf('Thu')
+                            - var fri = daysArray.indexOf('Fri')
+                            - var sat = daysArray.indexOf('Sat')
+                            - var sun = daysArray.indexOf('Sun')
+                            .d-flex.justify-content-between
+                                if mon !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Mon', checked)
+                                        label(for='mon') Mon
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Mon')
+                                        label(for='mon') Mon
+                                if tue !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Tue', checked)
+                                        label(for='tue') Tue
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Tue')
+                                        label(for='tue') Tue
+                                if wed !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Wed', checked)
+                                        label(for='wed') Wed
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Wed')
+                                        label(for='wed') Wed
+                                if thu !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Thu', checked)
+                                        label(for='thu') Thu
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Thu')
+                                        label(for='thu') Thu
+                                if fri !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Fri', checked)
+                                        label(for='fri') Fri
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Fri')
+                                        label(for='fri') Fri
+                                if sat !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Sat' checked)
+                                        label(for='sat') Sat
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Sat')
+                                        label(for='sat') Sat
+                                if sun !== -1
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Sun', checked)
+                                        label(for='sun') Sun
+                                else
+                                    .d-flex
+                                        input.form-control.mr-1(type='checkbox', name='days', value='Sun')
+                                        label(for='sun') Sun
+                        .form-group.w-49
+                            label(for='details') Details:
+                            textarea.form-control.w-100(name='details', rows='6') #{post.details}
+                    .text-right
+                        input.btn.btn-primary.mr-1(type='submit', value='Submit')
+                        button.btn.btn-secondary(type='button', onclick='window.history.go(-1)') Cancel

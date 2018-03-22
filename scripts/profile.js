@@ -25,4 +25,21 @@ $(document).ready(function() {
     $('#profile-pic-input').on('change', function() {
         $('#upload-profile-pic').submit();
     });
+
+    $('#options').on('submit', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            method: 'POST',
+            url: '/apply-options',
+            data: $(this).serialize(),
+            success: function(resp) {
+                if (resp.status === 'fail') {
+                    alertify.alert('An error occurred. Please contact the administrator.');
+                } else if (resp.status === 'success') {
+                    alertify.alert('Options applied successfully');
+                }
+            }
+        });
+    });
 });

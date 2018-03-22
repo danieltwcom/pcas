@@ -6,12 +6,17 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const pg = require("pg");
 const multer = require('multer');
+const bcrypt = require('bcrypt');
+const randomstring = require('randomstring');
+const mailer = require('./js/mailer')
 
 // ------------Server variables setup
 const port = process.env.SERVER_PORT || 56789;
 var app = express();
 const server = require("http").createServer(app);
 var pF = path.resolve(__dirname, "html");
+const saltRounds = 10;
+var hashPass;
 
 //----------------PostgrSQL connection---------------
 var pool = new pg.Pool({
@@ -58,50 +63,247 @@ app.use('/files', express.static('users-file'));
 
 // ----------- Regex format --------------------
 var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
-var stringRegex = /^[a-zA-Z0-9\-_]{1,15}$/;
+var stringRegex = /^$|^[a-zA-Z0-9\-_]{1,40}$/;
 var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 var passwordRegex = /^[^ \s]{4,15}$/;
-// -----------Regex format end -------------------
+var numberRegex = /^$|^[0-9]{1,2}$|100/
 
+var phoneRegex = /^$|^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
+// -----------Regex format end -------------------//
 
-// -----------Register ---------------------------
+// -----------Register ---------------------------//
 app.post("/register", function(req, resp) {
 	console.log(req.body)
-    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[req.body.username,req.body.pass,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,1,req.body.desp,req.body.otherPhone],(err,res) => {
-		console.log(err,res)
-		if(err){
-			console.log(err)
-		} 
-		if(res != undefined && res.rowCount == 1){
-			resp.send({status:"success"})	
-		}
-	})
-});
-
-// ------------Register End -------------------
-//-------------Login --------------------------
-app.post("/login", function(req, resp) {
-    console.log(req.body);
-	pool.query('SELECT * FROM users WHERE username = $1 and password = $2',[req.body.username,req.body.password],(err,res) => {
-        if (err) {console.log(err); }
-
-        console.log(res);
+    var tocken = randomstring.generate()
+    host=req.get('host');
+    
+    if (stringRegex.test(req.body.username) && stringRegex.test(req.body.fname)&& stringRegex.test(req.body.lname) && passwordRegex.test(req.body.pass) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.otherPhone) ){
+            req.session.email=req.body.email
+            var link="http://"+req.get('host')+"/verify?tc="+tocken+"&email="+req.body.email;
+        bcrypt.genSalt(saltRounds,function(err,salt){
+            bcrypt.hash(req.body.pass,salt,function(err,hash){
+                pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken],(err,res) => {
+                    console.log(err)
+                    if(err){
+                        resp.send({status:"fail",message:"Input invalid to database"})
+                    } 
+                    if(res != undefined && res.rowCount == 1){
+                        resp.send({status:"success"})
+                        
+                        mailer.emailVerify({reciver:req.body.email,link:link})
+                    }
+                });
+            });
+        });
         
-		if (res != undefined && res.rows.length > 0){
-			if(res.rows[0].is_verified == 1){
-                req.session = res.rows[0];
-                resp.redirect('/postings');
-			} else {
-				resp.render('blocks/login',{message:"Your account is not verified"});
-			}
-		} else {
-            resp.render('blocks/login', {message: 'Username or password is incorrect'});
-        }
-	})
+    } else {
+        resp.send({status:'fail',message:"Input invalid"})
+    }
 });
-//-------------Login End ----------------------
 
-//------------------ Routes
+app.post("/duplicate_check",function(req,resp){
+    console.log(req.body)
+    pool.query('SELECT * from users where username = $1 or email = $1',[req.body.checkValue],(err,res) => {
+        if(res != undefined && res.rowCount ==1){
+            resp.send({status:"fail"})
+        }
+        if(res != undefined && res.rowCount ==0){
+            resp.send({status:"success"})
+        }
+    })
+})
+
+// ------------Register End -------------------//
+//-------------Login --------------------------//
+app.post("/login", function(req, resp) {
+    console.log(req.body)
+    if(stringRegex.test(req.body.username) && passwordRegex.test(req.body.password)){
+    	pool.query('SELECT * FROM users WHERE username = $1 or email = $1',[req.body.username],(err,res) => {
+    		if (res != undefined && res.rows.length > 0){
+                bcrypt.compare(req.body.password,res.rows[0].password,function(err,resc){
+                    if(resc){
+                        if(res.rows[0].is_verified == 1){
+                            req.session = res.rows[0];
+                            console.log(req.session);
+                            resp.redirect('/postings');
+                        } else {
+                            req.session.email=res.rows[0].email
+                            resp.render('blocks/login',{message:"Your account is not verified", verify:"Click here to verify your account "})
+                        }
+                    } else {
+                        resp.render('blocks/login',{message:"Wrong password"})
+                    }
+                })
+    			
+    		} else {
+                resp.render('blocks/login',{message:"Account does not exist"})
+            }
+    	})
+    } else {
+        resp.render('blocks/login',{message:"Wrong username or password"})
+    }
+
+});
+//-------------Login End ----------------------//
+
+//-------------Email Verify ------------------//
+
+app.get("/verify",function(req,resp){
+
+    if(emailRegex.test(req.query.email) == false || stringRegex.test(req.query.tc) == false){
+        resp.render('blocks/login')
+        return
+    }
+
+
+    pool.query('Select * from users where email = $1',[req.query.email],(err,res) => {
+        var tocken;
+
+        if(res != undefined && res.rowCount==1){
+
+            tocken = res.rows[0].tocken
+
+        }
+        if(tocken==req.query.tc){
+            pool.query("Update users set is_verified = true where email = $1",[req.query.email],(err,res) => {
+                if(err){
+                    console.log(err)
+                    resp.render('blocks/verify',{message:'Unable to verify account'})
+                } else {
+                    resp.render('blocks/login',{message:'Verify success. Thank you! Now you may login'})
+                }
+            })
+        } else {
+             resp.render('blocks/verify', {message:'Varificaion fail'})
+        }
+        if(res == undefined | res.rowCount==0){
+            resp.render('blocks/verify',{message:"Account does not exist"})
+        }
+
+
+    })
+
+})
+//-------------Email Verify End --------------//
+
+//-------------Forget Password----------------
+app.post("/forgetPass",function(req,resp){
+    console.log(req.body)
+    if(emailRegex.test(req.body.email)){
+       pool.query('SELECT * FROM users WHERE email = $1',[req.body.email],(err,res) => {
+            if (res != undefined && res.rows.length > 0){
+                var tocken = randomstring.generate()
+                console.log(tocken)
+                var link="http://"+req.get('host')+"/resetPass?tc="+tocken+"&email="+req.body.email;
+                pool.query('UPDATE users SET tocken=$1 where email=$2',[tocken,req.body.email],(err,res) => {
+                    if(err){
+                        console.log(err)
+                    }
+                })
+
+                mailer.emailForgetPass({reciver:req.body.email,link:link})
+                resp.render("blocks/pleaseVerify")
+            } else {
+                resp.render("blocks/forget-pass",{message:'account dost not exit'})
+            }
+    
+        })
+    } else {
+        resp.render("blocks/forget-pass",{message:'account dost not exit'})
+    }
+    
+})
+
+app.get("/resetPass",function(req,resp){
+
+    if(emailRegex.test(req.query.email) == false || stringRegex.test(req.query.tc) == false){
+        resp.render('blocks/login')
+        return
+    }
+
+    pool.query('Select * from users where email = $1',[req.query.email],(err,res) => {
+        var tocken;
+        var date = new Date();
+        // check account exist
+        console.log(req.query.email)
+        console.log(res.rows[0])
+        if(res != undefined && res.rowCount==1){
+
+            tocken = res.rows[0].tocken
+
+        }
+        // check tocken expired date
+        if(date > res.rows[0].toc_expire){
+            resp.render('blocks/forget-pass',{message:'Link expired'})
+            return 
+        }
+        // verify tocken
+        if(tocken==req.query.tc){
+            req.session.email = req.query.email
+            resp.render('blocks/reset-pass')
+        } else {
+             resp.render('blocks/forget-pass', {message:'Link expired'})
+        }
+        if(res == undefined | res.rowCount==0){
+            resp.render('blocks/forget-pass',{message:"Account does not exist"})
+        }
+
+
+    })
+})
+
+app.post("/resetPass",function(req,resp){
+    console.log(req.body)
+    if(req.body.password != req.body.rePassword){
+        resp.render('blocks/reset-pass', {message:"Input doesn't match"})
+    }
+
+
+    if(passwordRegex.test(req.body.password)){
+       bcrypt.genSalt(saltRounds,function(err,salt){
+            bcrypt.hash(req.body.password,salt,function(err,hash){
+                pool.query( 'UPDATE users SET password = $1  where email = $2',[hash,req.session.email],(err,res) => {
+                    console.log(err)
+                    if(err){
+                        resp.send({status:"fail",message:"Input invalid to database"})
+                    } 
+                    if(res != undefined && res.rowCount == 1){
+                        pool.query('UPDATE users SET tocken = null where email = $1',[req.session.email],(err,res) => {
+                            if (err){
+                                console.log(err)
+                            }
+                        })
+                        resp.render('blocks/login', {message:'Reset password succes, now you may login'}) 
+                       
+                    }
+                });
+            });
+        });
+    }
+})
+
+//---------------User profile ---------------//
+
+
+
+app.post("/edit-profile",function(req,resp){
+    console.log(req.body)
+    if((stringRegex.test(req.body.first_name) && stringRegex.test(req.body.last_name) && stringRegex.test(req.body.location) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.other_phone) && numberRegex.test(req.body.age) && stringRegex.test(req.body.gender) )== false ){
+        resp.render('blocks/edit-profile')
+        return
+    }
+    pool.query("UPDATE users SET first_name=$1 last_name=$2 location=$3 phone_number = $4 other_phone = $5 age = $6 gender = $7 description = $8",[req.body.first_name,req.body.last_name,req.body.location,req.body.phone,req.body.other_phone,req.body.age,req.body.gender,req.body.description],(err,res) => {
+        if (err){
+            console.log(err)
+            
+        }
+    })
+
+})
+
+
+
+//------------------ Routes --------------- //
 app.get("/", function (req, resp) {
     if (req.session.username) {
         resp.redirect('/postings');
@@ -249,6 +451,10 @@ app.get('/register', function(req, resp) {
         resp.render('blocks/register');
     }
 });
+
+app.get('/forgetPass',function(req,resp){
+    resp.render('blocks/forget-pass')
+})
 
 app.get('/messages', function(req, resp) {
     if (req.session.username) {
@@ -717,6 +923,15 @@ app.get('/logout', function(req, resp) {
     resp.redirect('/');
 });
 
+app.get('/pleaseVerify',function(req,resp){
+    if(req.session.email){
+        resp.render('blocks/pleaseVerify')
+    } else {
+        resp.render('blocks/login')
+    }
+
+})
+
 // Create
 app.post('/new-post', function(req, resp) {
     if (req.session.role === 'coordinator') {
@@ -761,4 +976,14 @@ server.listen(port, function (err) {
         return false;
     }
     console.log(port + " is running");
+});
+
+
+//----------------Functions -------------------//
+
+//----------------Generate Tocken ------------//
+
+app.get("/test", function (req, resp) {
+    
+    resp.render('blocks/pleaseVerify');
 });

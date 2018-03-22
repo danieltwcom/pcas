@@ -1,4 +1,11 @@
 $(document).ready(function() {
+    $('#compose').on('click', function() {
+        location.href='/compose';
+    });
+
+
+
+    
     let clicked;
 
     $('.mark-as-read-button').on('click', function() {

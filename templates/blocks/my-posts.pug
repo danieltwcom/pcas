@@ -8,36 +8,41 @@ block content
     .card
         .card-body.bg-light
             .d-flex.justify-content-between
-                .w-55
+                .w-50
                     strong Title
                 .w-15
                     strong Posted On
                 .w-10
                     strong Status
-                .w-10            
+                .w-10
+                    strong Action     
                 .w-15
             each val, index in posts
-                .d-flex.justify-content-between.align-items-center.mb-2
-                    .w-55
+                .d-flex.justify-content-between.align-items-center.mb-2(id='post-' + posts[index.post_id])
+                    .w-50
                         a(href='/posting-details/?post_id=' + posts[index].post_id + '&role=' + user.role) [##{posts[index].post_id}] #{posts[index].title}
                     .w-15
                         | #{posts[index].date_created.toDateString()}
                     if posts[index].progress === 'Open'
-                        .w-10
-                            span.badge.badge-primary.status Open
-                        .w-10
+                        form.form-inline.w-20.job-start(method='POST', action='/job/start')
+                            .w-50
+                                span.badge.badge-primary.status Open
+                            .w-50
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-success(type='submit', value='Start')
                     else if posts[index].progress === 'In Progress'
                         form.form-inline.w-20.job-complete(method='POST', action='/job/complete')
                             .w-50
                                 span.badge.badge-warning.status In Progress
                             .w-50
                                 input(type='hidden', name='post_id', value=posts[index].post_id)
-                                input.btn.btn-sm.btn-primary(type='submit', value='Complete?')
+                                input.btn.btn-sm.btn-primary(type='submit', value='Complete')
                     else if posts[index].progress === 'Complete'
                         .w-10
                             span.badge.badge-success.status Complete
                         .w-10
-                    .w-15.d-flex.justify-content-end
+                            button.btn.btn-secondary.btn-sm(type='button', data-toggle='tooltip', data-placement='top', title='If you liked working with the applicant(s), press the upvote button in the Applicant list') ?
+                    .w-15.d-flex
                         if posts[index].status === false
                             form.activate(action='/activate-post', method='POST')
                                 input(type='hidden', name='post_id', value=posts[index].post_id)

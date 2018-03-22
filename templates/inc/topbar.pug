@@ -1,10 +1,9 @@
 nav.navbar.navbar-light.bg-light.mb-3
     if user
         include dropdown
-    .mx-auto
-        h3
-            img.w-10(src='/image/bcit.svg')
-            | Post-Secondary Communications Access Services 
+    .mx-auto.d-flex.align-items-center
+        img.w-10(src='/image/bcit.svg')
+        h3 Post-Secondary Communications Access Services 
             if user
                 | #{user.user_id}
     //-- .d-flex.w-20.align-items-center.border.p-2.rounded

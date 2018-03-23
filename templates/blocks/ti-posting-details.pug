@@ -62,7 +62,9 @@ block content
             .card
                 .card-body
                     h3 Send Message
-                    form(action='/message/send/' + post.user_id)
+                    form(action='/send-message' + post.user_id)
+                        input(type='hidden', name='sender', value=user.username)
+                        input(type='hidden', name='recipient', value=post.username)
                         .form-group
                             label.d-block(for='subject') Subject:
                             input.form-control(type='text', name='subject')

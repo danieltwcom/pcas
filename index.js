@@ -334,7 +334,7 @@ app.get('/profile', function(req, resp) {
             if (result !== undefined && result.rows.length > 0) {
                 pool.query('SELECT * FROM upvotes', function(err, result) {
                     if (err) { console.log(err); }
-                    resp.render('blocks/profile', {user: profile, upvotes: result.rows});
+                    resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows});
                 });
             }
         });
@@ -353,7 +353,7 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
             if (err) { console.log(err); }
 
             pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
@@ -779,6 +779,45 @@ app.post('/delete-post', function(req, resp) {
     }
 });
 
+app.post('/change-progress', function(req, resp) {
+    if (req.session.username) {
+        if (req.body.progress !== 'Open') {
+            pool.query('SELECT * FROM applicants WHERE post_id = $1 AND accepted = true', [req.body.post_id], function(err, result) {
+                if (err) {
+                    console.log(err);
+                    resp.send({status: 'fail'});
+                } else if (result !== undefined) {
+                    if (result.rows.length === 0) {
+                        resp.send({status: 'empty'});
+                    } else {
+                        if (req.body.progress === 'Complete') {
+                            pool.query('UPDATE applicants SET is_complete = true WHERE post_id = $1', [req.body.post_id]);
+                        } else {
+                            pool.query('UPDATE applicants SET is_complete = false WHERE post_id = $1', [req.body.post_id]);
+                        }
+
+                        pool.query('UPDATE coord_postings SET progress = $1 WHERE post_id = $2 RETURNING post_id, progress', [req.body.progress, req.body.post_id], function(err, result) {
+                            if (err) { console.log(err); }
+
+                            if (result !== undefined && result.rowCount > 0) {
+                                resp.send({status: 'success', post_id: result.rows[0].post_id, progress: result.rows[0].progress});
+                            }
+                        });
+                    }
+                }
+            });
+        } else {
+            pool.query('UPDATE coord_postings SET progress = $1 WHERE post_id = $2 RETURNING post_id, progress', [req.body.progress, req.body.post_id], function(err, result) {
+                if (err) { console.log(err); }
+
+                if (result !== undefined && result.rowCount > 0) {
+                    resp.send({status: 'success', post_id: result.rows[0].post_id, progress: result.rows[0].progress});
+                }
+            });
+        }
+    }
+});
+
 app.post('/application/:status', function(req, resp) {
     if (req.session.username) {
         if (req.params.status === 'withdraw') {
@@ -881,7 +920,7 @@ app.post('/revoke-applicant', function(req, resp) {
     }
 });
 
-app.post('/job/start', function(req, resp) {
+/* app.post('/job/start', function(req, resp) {
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
             pool.query('SELECT * FROM applicants WHERE post_id = $1 AND accepted = true', [req.body.post_id], function(err, result) {
@@ -925,7 +964,7 @@ app.post('/job/complete', function(req, resp) {
             });
         }
     }
-});
+}); */
 
 app.get('/logout', function(req, resp) {
     req.session = null;
@@ -1002,6 +1041,14 @@ app.post('/new-post', function(req, resp) {
                 resp.send({status: 'success'});
             }
         });
+    }
+});
+
+app.get('/post-created', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/post-created', {user: req.session});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
     }
 });
 

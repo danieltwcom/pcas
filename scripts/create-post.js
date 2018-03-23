@@ -98,34 +98,38 @@ $(document).ready(function() {
     $('#new-post').on('submit', function(e) {
         e.preventDefault();
 
-        $.ajax({
-            method: 'POST',
-            url: '/new-post',
-            data: $(this).serialize(),
-            success: function(resp) {
-                if (resp.status === 'success') {
-                    localStorage.clear();
-                    location.href = '/post-created';
-                } else if (resp.status === 'fail') {
-                    alert('an error occurred');
-                    window.onbeforeunload = function() {
-                        localStorage.setItem('title', $('input[name=title]').val());
-                        localStorage.setItem('when', $('input[name=when]').val());
-                        localStorage.setItem('school', $('input[name=school]').val());
-                        localStorage.setItem('course_number', $('input[name=course_number]').val());
-                        localStorage.setItem('time', $('input[name=time]').val());
-                        localStorage.setItem('details', $('textarea[name=details]').val());
-                        localStorage.setItem('type', $('select[name=type]').val());
-                        localStorage.setItem('looking_for_interpreter', $('input[name=looking_for_interpreter]').val());
-                        localStorage.setItem('how_many_int', $('input[name=how_many_int]').val());
-                        localStorage.setItem('how_many_tra', $('input[name=how_many_tra]').val());
-                        localStorage.setItem('is_screened', $('input[name=is_screened]').val());
-                        localStorage.setItem('is_verified', $('input[name=is_verified]').val());
-                        localStorage.setItem('hide_email', $('input[name=hide_email]').val());
-                        localStorage.setItem('hide_phone', $('input[name=hide_phone]').val());
+        if (isNaN(parseInt($('input[name=how_many_tra]').val()) + parseInt($('input[name=how_many_int]').val()))) {
+            alertify.alert('wrong');
+        } else {
+            $.ajax({
+                method: 'POST',
+                url: '/new-post',
+                data: $(this).serialize(),
+                success: function(resp) {
+                    if (resp.status === 'success') {
+                        localStorage.clear();
+                        location.href = '/post-created';
+                    } else if (resp.status === 'fail') {
+                        alert('an error occurred');
+                        window.onbeforeunload = function() {
+                            localStorage.setItem('title', $('input[name=title]').val());
+                            localStorage.setItem('when', $('input[name=when]').val());
+                            localStorage.setItem('school', $('input[name=school]').val());
+                            localStorage.setItem('course_number', $('input[name=course_number]').val());
+                            localStorage.setItem('time', $('input[name=time]').val());
+                            localStorage.setItem('details', $('textarea[name=details]').val());
+                            localStorage.setItem('type', $('select[name=type]').val());
+                            localStorage.setItem('looking_for_interpreter', $('input[name=looking_for_interpreter]').val());
+                            localStorage.setItem('how_many_int', $('input[name=how_many_int]').val());
+                            localStorage.setItem('how_many_tra', $('input[name=how_many_tra]').val());
+                            localStorage.setItem('is_screened', $('input[name=is_screened]').val());
+                            localStorage.setItem('is_verified', $('input[name=is_verified]').val());
+                            localStorage.setItem('hide_email', $('input[name=hide_email]').val());
+                            localStorage.setItem('hide_phone', $('input[name=hide_phone]').val());
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     });
 });

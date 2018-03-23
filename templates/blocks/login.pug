@@ -6,10 +6,10 @@ append scripts
 block content
     .card.w-25.mx-auto
         .card-body
-            if message !== 'Verification successful'
+            if message === 'Verification successful'
+                .alert.alert-success #{message}
+            else if message
                 .alert.alert-danger #{message}
-            else
-                .alert.alert-successful #{message}
             if varify
                 a.btn.btn-primary.btn-sm.active(href='/varify') #{varify}
             form(action='/login', method='post')

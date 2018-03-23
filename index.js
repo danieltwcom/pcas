@@ -184,7 +184,7 @@ app.get("/verify",function(req,resp){
                 }
             })
         } else {
-             resp.render('blocks/verify', {message:'Varificaion fail'})
+             resp.render('blocks/verify', {message:'Verificaion fail'})
         }
         if(res == undefined | res.rowCount==0){
             resp.render('blocks/verify',{message:"Account does not exist"})
@@ -1007,7 +1007,7 @@ app.post('/new-post', function(req, resp) {
 
 // ------------- Admin Panel --------------
 app.get("/admin-panel",function(req,res){
-    res.render("blocks/admin-panel");
+    res.render("blocks/admin-panel", {user: req.session});
 })
 
 // --- manage user ---

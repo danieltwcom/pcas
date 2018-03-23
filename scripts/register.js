@@ -117,7 +117,7 @@ $(document).ready(function() {
 				return;
 			} 
 		}
-		
+		console.log(password.value);
 		console.log("success")
 		$.ajax({
             url:"/register",

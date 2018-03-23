@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const pg = require("pg");
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 
 // ------------Server variables setup
 const port = process.env.SERVER_PORT || 56789;
@@ -22,6 +23,15 @@ var pool = new pg.Pool({
 	max:process.env.PGSQL_MAX,
     port: process.env.DB_PORT
 });
+
+// ---- Node Mailer setup ---- //
+let transporter = nodemailer.createTransport({
+    service:"gmail",
+    auth:{
+        user:'pcasnotification@gmail.com',
+        pass:'pcaspassword'
+    }
+})
 
 // initialize body parser
 app.use(bodyParser.urlencoded({
@@ -660,6 +670,30 @@ app.get('/logout', function(req, resp) {
 
 // Create
 app.post('/new-post', function(req, resp) {
+    function new_post_notification(mail_title){
+        pool.query("SELECT email FROM users WHERE email_notification = true",[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+            }else {
+                for(i=0;i<result.rows.length;i++){
+                    let mailOptions = {
+                        from:'pcasnotification@gmail.com',
+                        to: result.rows[i].email,
+                        subject:mail_title,
+                        text:"Check out the post here: "+"post_url"// todo
+                    }
+                    transporter.sendMail(mailOptions,function(err,info){
+                        if(err){
+                            console.log(err)
+                        }else{
+                            console.log('Email sent: '+ info.response);
+                        }
+                    })
+                }   
+            }
+        }) 
+    }
     if (req.session.role === 'coordinator') {
         if (req.body.is_verified) {
             var isVerified = true;
@@ -678,6 +712,7 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
+                new_post_notification("[New Post] "+req.body.title);
                 resp.send({status: 'success'});
             }
         });
@@ -689,11 +724,184 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
+                new_post_notification("[New Post] "+req.body.title);
                 resp.send({status: 'success'});
             }
         });
     }
 });
+
+// ------------- Admin Panel --------------
+app.get("/admin-panel",function(req,res){
+    res.render("blocks/admin-panel");
+})
+
+// --- manage user ---
+app.post("/manage-user",function(req,res){
+    if(req.body.type == "get"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT * FROM users WHERE username LIKE $1 OR email LIKE $1 OR CAST(user_id as varchar) =$2 ORDER BY user_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no user found"});
+            }
+        })
+    }
+    if(req.body.type == "verify"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET is_verified = true WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+    if(req.body.type == "delete"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("DELETE FROM upvotes WHERE voter_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                pool.query("DELETE FROM users WHERE user_id IN "+user_arr_sql
+                ,[]
+                ,function(err,result){
+                    if(err){
+                        console.log(err);
+                        res.send({status:"fail"});
+                    }else{
+                        res.send({
+                            status:"success",
+                            row_updated:result.rowCount,
+                        })
+                    }
+                })
+            }
+        })
+        
+    }
+})
+
+// --- manage post ---
+app.post("/manage-post",function(req,res){
+    if(req.body.type=="get-co"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE title LIKE $1 OR CAST(post_id as varchar) = $2 ORDER BY post_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no post found"});
+            }
+        })
+    }else if(req.body.type=="get-ti"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (title LIKE $1 OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no post found"});
+            }
+        })
+    }else if(req.body.type=="modify"){
+
+    }else if(req.body.type=="delete"){
+        let co_post_array = [];
+        let ti_post_array = [];
+        let co_post_arr_sql = "(0)";
+        let ti_post_arr_sql = "(0)";
+
+        if(req.body.co_post_array){
+            co_post_array = req.body.co_post_array
+            co_post_arr_sql = "("
+        }
+
+        if(req.body.ti_post_array){
+            ti_post_array = req.body.ti_post_array
+            ti_post_arr_sql = "("
+        }
+        
+        for(i=0; i<co_post_array.length;i++){
+            if(i==co_post_array.length-1){
+                co_post_arr_sql+=co_post_array[i]+")"
+            }else{
+                co_post_arr_sql+=co_post_array[i]+","
+            }
+        }
+        for(i=0; i<ti_post_array.length;i++){
+            if(i==co_post_array.length-1){
+                ti_post_arr_sql+=ti_post_array[i]+")"
+            }else{
+                ti_post_arr_sql+=ti_post_array[i]+","
+            }
+        }
+        console.log(ti_post_arr_sql,co_post_arr_sql);
+        pool.query("DELETE FROM coord_postings WHERE post_id IN "+co_post_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                pool.query("DELETE FROM ti_postings WHERE post_id IN "+ti_post_arr_sql
+                ,[]
+                ,function(err,result){
+                    if(err){
+                        console.log(err);
+                        res.send({status:"fail"});
+                    }else{
+                        res.send({
+                            status:"success",
+                            row_updated:co_post_array.length+ti_post_array.length,
+                        })
+                    }
+                })
+            }
+        })
+     
+    }
+})
 
 // --------------Server listening --------------
 server.listen(port, function (err) {

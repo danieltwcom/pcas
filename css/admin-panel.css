@@ -1,0 +1,86 @@
+.side-menu{
+    height: 50%;
+    width: 0em;
+    z-index: 3;
+    position: absolute;
+    overflow: hidden;
+    transition: 0.3s;
+    background-color: #2c2c2c;
+}
+
+.side-menu a{
+    display: block;
+    text-decoration: none;
+    font-size: 20px;
+    color: rgb(196, 196, 196);
+    transition: 0.3s;
+    margin: 0.3em;
+}
+
+.side-menu a:hover{
+    color: black;
+    background-color: rgb(200, 151, 0);
+}
+
+
+.side-menu-icon{
+    position:relative;
+    border-radius: 0;
+}
+
+.sidebar-nav{
+    padding: 2%;
+}
+
+.content{
+    margin-left: 2%;
+}
+
+.wrap-word{
+    word-break: break-all;
+}
+
+.alert-box{
+    display: none;
+}
+
+#manage-user{
+    display: none;
+}
+
+#manage-post{
+    display: none;
+}
+
+#manage-statistic{
+    display: none;
+}
+
+.card:hover ,.card:hover a{
+    background-color:rgba(109, 109, 109, 0.5);
+    color:white;
+}
+
+.card{
+    transition: 0.5s;
+}
+
+.card a{
+    color:black;
+    text-decoration: none;
+}
+
+#close_card{
+    font-size: 1.5em;
+    position: absolute;
+    right:3px;
+    top:0px;
+}
+
+.card-detail{
+    display: none;
+    width: 0px;
+    height:0px;
+    transition: 0.3s;
+}
+

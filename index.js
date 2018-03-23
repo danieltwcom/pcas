@@ -170,7 +170,7 @@ app.get("/verify",function(req,resp){
                     console.log(err)
                     resp.render('blocks/verify',{message:'Unable to verify account'})
                 } else {
-                    resp.render('blocks/login',{message:'Verify success. Thank you! Now you may login'})
+                    resp.render('blocks/login',{message:'Verification successful'})
                 }
             })
         } else {

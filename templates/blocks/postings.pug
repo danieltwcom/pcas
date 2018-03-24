@@ -4,7 +4,6 @@ append scripts
     script(src='/scripts/postings.js')
 
 block content
-    - function convertDate(date) {return date.toLocaleDateString();}
     h3 Postings
     ul.nav.nav-tabs
         li.nav-item
@@ -16,7 +15,9 @@ block content
             .card
                 .card-body.bg-light
                     .d-flex.justify-content-between.mb-2
-                        .w-25
+                        .w-10
+                            strong Preferred
+                        .w-15
                             strong Looking For
                         .w-35
                             strong Title
@@ -27,19 +28,28 @@ block content
                     #help-postings
                         each val, index in coord_postings
                             .d-flex.justify-content-between.mb-2
-                                .w-25
+                                .w-10
                                     if coord_postings[index].verified
                                         span.badge.badge-success.mr-1 Verified
                                     if coord_postings[index].screened
                                         span.badge.badge-success.mr-1 Screened
+                                    if !coord_postings[index].screened && !coord_postings[index].verified
+                                        span.badge.badge-secondary.mr-1 Any
+                                .w-15
                                     - var iNum = parseInt(coord_postings[index].num_of_interpreter);
                                     - var tNum = parseInt(coord_postings[index].num_of_transcriber);
                                     if iNum > 0
                                         span.badge.badge-primary.mr-1 Interpreter(s)
                                     if tNum > 0
                                         span.badge.badge-primary.mr-1 Transcriber(s)
-                                .w-35
+                                .w-35.d-flex.justify-content-between.align-items-center
                                     a(href='/posting-details?post_id=' + coord_postings[index].post_id + '&role=' + coord_postings[index].role) [##{coord_postings[index].post_id}] #{coord_postings[index].title}
+                                    if coord_postings[index].progress === 'Open'
+                                        span.badge.badge-primary.mr-5 Open
+                                    else if coord_postings[index].progress === 'Fulfilled'
+                                        span.badge.badge-info.mr-5 Fulfilled
+                                    else if coord_postings[index].progress === 'In Progress'
+                                        span.badge.badge-warning.mr-5 In Progress
                                 .w-15 #{coord_postings[index].date_created.toDateString()}
                                 .w-25 #{coord_postings[index].school}
         .tab-pane.fade#work(role='tabpanel', arialabelledby='work-tab')

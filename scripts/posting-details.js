@@ -9,7 +9,9 @@ $(document).ready(function() {
         .cancelBtn('Cancel')
         .confirm('Please be certain you really want to accept this applicant.', function(e) {
             acceptApplicant(form);
-        })
+        }, function(e) {
+            return false;
+        });
     });
 
     $('.application-upvote').on('submit', function(e) {

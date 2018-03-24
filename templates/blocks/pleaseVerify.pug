@@ -1,0 +1,10 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/login.js')
+
+block content
+    .card.w-50.mx-auto
+        .card-body.text-center A email has been sent to you, please check inbox.
+            p
+            a(href='/') Login

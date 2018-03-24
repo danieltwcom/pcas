@@ -6,37 +6,39 @@ append scripts
 block content
     .card.w-75.mx-auto
         .card-body
-            form#register_from.d-flex.justify-content-between.flex-wrap(action='', method='post')
+            form#register_from.d-flex.justify-content-between.flex-wrap(action='/register', method='post')
                 .form-group.w-49
                     label(for='username') Username:
-                    input.form-control(type='text', name='username', required)
+                    input.form-control(type='text', name='username',required)
+                    #username 
                 .form-group.w-49
                     label(for='who-are-you') Who Are You:
-                    select.form-control(name='who-are-you', required)
+                    select.form-control(name='who-are-you',required)
                         option
                         option(value='coordinator') Coordinator
-                        option(value='interpreter') Interpreter/Transcriber
+                        option(value='ti') Interpreter/Transcriber
                 .form-group.w-49
                     label(for='first-name') First Name:
-                    input.form-control(type='text', name='first_name', required)
+                    input.form-control(type='text', name='first_name',required)
                 .form-group.w-49
                     label(for='last-name') Last Name:
-                    input.form-control(type='text', name='last_name', required)
+                    input.form-control(type='text', name='last_name',required)
                 .form-group.w-49
                     label(for='email') Email:
-                    input.form-control(type='email', name='email', required)
+                    input.form-control(type='email', name='email',required)
+                    #email
                 .form-group.w-49
                     label(for='confirm-email') Confirm Email:
-                    input.form-control(type='email', name='confirm_email', required)
+                    input.form-control(type='email', name='confirm_email',required)
                 .form-group.w-49
                     label(for='password') Password:
-                    input.form-control(type='password', name='password', required)
+                    input.form-control(type='password', name='password',required)
                 .form-group.w-49
                     label(for='confirm-password') Confirm Password:
-                    input.form-control(type='password', name='confirm_password', required)
+                    input.form-control(type='password', name='confirm_password',required)
                 .form-group.w-33
                     label(for='School') School:
-                    select.form-control(name='school', required)
+                    select.form-control(name='school',required)
                         option
                         option(value='uvic') University of Victoria
                         option(value='sfu') Simon Fraser University

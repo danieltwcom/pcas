@@ -1,0 +1,21 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/message-details.js')
+
+block content
+    h3 Subject
+    .card
+        .card-header
+            .d-flex
+                .w-10
+                    strong From:
+                div Dummy
+            .d-flex
+                .w-10
+                    strong Date:
+                div Wednesday, March 21, 2018
+        .card-body Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam omnis voluptatum eveniet corrupti dolore repudiandae recusandae accusamus expedita veniam exercitationem at adipisci dolores cumque, excepturi hic consequuntur totam, necessitatibus debitis.
+        .card-footer.text-right
+            button.btn.btn-primary.mr-1#reply(type='button') Reply
+            button.btn.btn-danger(type='button') Delete

@@ -10,16 +10,17 @@ $(document).ready(function() {
 	var confirm_password = register_from.elements['confirm_password'];
 	var school = register_from.elements['school'];
 	var phone = register_from.elements['phone'];
-	var altPhone = register_from.elements['other-phone'];
+	var altPhone = register_from.elements['other_phone'];
 	var desp = register_from.elements['description'];
-	var submitBu = $('#Submit');
 	
 	var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
 	var nameRegex = /^[a-zA-Z]{1,15}$/;
-	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
+	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$|^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 	var passwordRegex = /^[^ \s]{4,15}$/;
-	var phoneRegex = /^[0-9\-]{10,12}$/;
-	var checkDic = {"username":0,
+	var phoneRegex = /^$|^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
+
+    var checkDic = {
+                    "username":0,
 				   "first_name":0,
 				   "last_name":0,
 				   "email":0,
@@ -27,11 +28,12 @@ $(document).ready(function() {
 				   "password":0,
 				   "confirm_password":0
 				   }
-	console.log(checkDic.hasOwnProperty("username"))
+    
+//----------- Regex check -----------------//
 	username.onkeyup = function(){
 		regexTest(username,"username",usernameRegex)
-	};
-	
+	}; 
+    
 	first_name.onkeyup = function(){
 		regexTest(first_name,"first_name",nameRegex)
 	};
@@ -43,39 +45,38 @@ $(document).ready(function() {
 	email.onkeyup = function(){
 		regexTest(email,"email",emailRegex)
 		if(confirm_email.value==email.value){
-			confirm_email.style.color="black"
+			confirm_email.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
 		} else {
-			confirm_email.style.color="red"
+			confirm_email.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
 		}
-	}
-	
+	};
+    
 	confirm_email.onkeyup = function(){
 		regexTest(confirm_email,"confirm_email",emailRegex)
 		if(confirm_email.value==email.value){
-			confirm_email.style.color="black"
+			confirm_email.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
 		} else {
-			confirm_email.style.color="red"
+			confirm_email.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
 		}
-	}
+	};
 	
 	password.onkeyup = function(){
 		regexTest(password,"password",passwordRegex)
 		if(confirm_password.value==password.value){
-			confirm_password.style.color="black"
+			confirm_password.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
 		} else {
-			confirm_password.style.color="red"
+			confirm_password.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
 		}
-	}
+	};
 	
 	confirm_password.onkeyup = function(){
 		regexTest(confirm_password,"confirm_password",passwordRegex)
 		if(confirm_password.value==password.value){
-			confirm_password.style.color="black"
+			confirm_password.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
 		} else {
-			confirm_password.style.color="red"
+			confirm_password.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
 		}
-	}
-	
+	};
 	phone.onkeyup = function(){
 		regexTest(phone,"phone",phoneRegex)
 	}
@@ -83,33 +84,80 @@ $(document).ready(function() {
 	altPhone.onkeyup = function(){
 		regexTest(altPhone,"altPhone",phoneRegex)
 	}
+//------------Regex check end -----------//
+    
+//-------------    duplicate check ----------// 
 	
+	username.onfocusout = function(){
+        if(usernameRegex.test(username.value)){
+            $.ajax({
+                url:"/duplicate_check",
+                type:"post",
+                data:{checkValue:username.value},
+                success:function(resp){
+                    if(resp.status=='success'){
+                        $("#username")[0].innerHTML="&nbsp &nbsp Username can be used"
+                         $("#username")[0].style.color='blue'
+                         checkDic['username']=1
+                         username.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
+                    }
+                    if(resp.status=='fail'){
+                        $("#username")[0].innerHTML="&nbsp &nbsp Username already taken"
+                         $("#username")[0].style.color='red'
+                         checkDic['username']=0
+                         username.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
+                    }
+                }
+            })
+        }
+        if(usernameRegex.test(username.value)== false){
+            $("#username")[0].innerHTML="&nbsp &nbsp Username invalid"
+            $("#username")[0].style.color='red'
+            
+        }
+        
+    }
+    
+    email.onfocusout = function(){
+        if(emailRegex.test(email.value)){
+            $.ajax({
+                url:"/duplicate_check",
+                type:"post",
+                data:{checkValue:email.value},
+                success:function(resp){
+                    if(resp.status=='success'){
+                        $("#email")[0].innerHTML="&nbsp &nbsp Email can be used"
+                         $("#email")[0].style.color='blue'
+                         checkDic['email']=1
+                        email.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
+                    }
+                    if(resp.status=='fail'){
+                        $("#email")[0].innerHTML="&nbsp &nbsp Email already taken"
+                        $("#email")[0].style.color='red'
+                        checkDic['email']=0
+                        email.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
+                    }
+                }
+            })
+            
+            
+        }
+        if(emailRegex.test(email.value)== false){
+            $("#email")[0].innerHTML="&nbsp &nbsp Email invalid"
+            $("#email")[0].style.color='red'
+            
+        }
+        
+    }
 	
+//-------------    duplicate check end ----------// 
+//------------- Submit -------------------------//
 	
-	function regexTest (variable,variableName,regex){
-		if(checkDic.hasOwnProperty(variableName)){
-			if(regex.test(variable.value)){
-				variable.style.color='black';
-				checkDic[variableName] = 1;
-			} else {
-				variable.style.color='red';
-				checkDic[variableName] = 0;
-			}
-			
-		} else {
-			if(regex.test(variable.value)){
-				variable.style.color='black';
-			} else {
-				variable.style.color='red';
-			}
-			
-		}
-		
-	}
-	
-	submitBu.on('click', function(e) {
-		
-		for (var key in checkDic){
+
+	 $("form").submit(function(e){
+		 e.preventDefault(e);
+		 console.log("success")
+         for (var key in checkDic){
 			if (checkDic[key] == 0){
 				console.log(key)
 				register_from.elements[key].focus();
@@ -117,8 +165,7 @@ $(document).ready(function() {
 				return;
 			} 
 		}
-		
-		console.log("success")
+
 		$.ajax({
             url:"/register",
             type:"post",
@@ -135,10 +182,33 @@ $(document).ready(function() {
 				desp:desp.value
             },
             success:function(resp) {
-				console.log('test')
-				location.href = '/';
+                if(resp.status=="success"){
+                    location.href = '/pleaseVerify';
+                }
+                if(resp.status=="fail"){
+                    alert(resp.message)
+                }
+				
             }
         });
-		
-    });
+
+            })
+     
+//--------------   Functions -------------------//
+	
+	function regexTest (variable,variableName,regex){
+		console.log(regex.test(variable.value))
+        if(regex.test(variable.value)){
+
+            variable.style.boxShadow='0 0 0 0.2rem rgba(0,123,255,.25)';
+            checkDic[variableName] = 1;
+            
+        } else {
+            variable.style.boxShadow='0 0 0 0.2rem rgba(234,12,95,.5)';
+            checkDic[variableName] = 0;
+            
+        }
+			
+	}
+	
 })

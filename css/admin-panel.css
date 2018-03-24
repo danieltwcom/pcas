@@ -19,7 +19,7 @@
 
 .side-menu a:hover{
     color: black;
-    background-color: rgb(200, 151, 0);
+    background-color: #ffc107;
 }
 
 
@@ -82,5 +82,21 @@
     width: 0px;
     height:0px;
     transition: 0.3s;
+}
+
+.table-body td{
+    background-color: none;
+    transition: 0.5s;
+}
+
+
+#co_post_table, #ti_post_table, #user_table {
+    display: none;
+}
+
+.custom-tr th{
+    background-color: gray;
+    border:0px;
+    padding:0px;
 }
 

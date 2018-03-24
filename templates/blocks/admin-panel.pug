@@ -7,7 +7,7 @@ append scripts
 block content
     .row.d-flex.justify-content-center
         #alert_box.alert-box.alert.alert-warning.alert-dismissible.fade.show(role='alert')
-            button.close(type='button', data-dismiss='alert', aria-label='Close')
+            button#alert_close_btn.close(type='button', aria-label='Close')
                 span(aria-hidden='true') ×
             span#alert_text
 
@@ -40,10 +40,12 @@ block content
                         span.caret
                     ul.dropdown-menu
                         a#verify_btn.dropdown-item(href="#") Verify
+                        a#screen_btn.dropdown-item(href="#") Screen
+                        a#promote_btn.dropdown-item(href="#") Promote Admin
                         a#delete_btn.dropdown-item(href="#") Delete
             
             //- found user table
-            table.table.table-light.mt-2
+            table#user_table.table.table-light.table-hover.mt-2
                 thead.thead-dark
                     tr
                         th(scope='col') #
@@ -53,8 +55,9 @@ block content
                         th(scope='col') Last Name
                         th(scope='col') Role
                         th(scope='col') Verified
+                        th(scope='col') Screened
                         th(scope='col') 
-                tbody#table_body
+                tbody#table_body.table-body
         
         //- ------ Manage Posts ------
         #manage-post.content.container
@@ -67,17 +70,26 @@ block content
                     .input-group-append
                         button#search_post_btn.btn.btn-primary search
 
-                //- action button
+                //- action buttons
                 .dropdown
                     button.btn.btn-warning.dropdown-toggle(type='button', data-toggle='dropdown')
                         | Action
                         span.caret
                     ul.dropdown-menu
+                        label.ml-3 Set Post
+                        a#open_post_btn.dropdown-item(href="#") Open
+                        a#fulfill_post_btn.dropdown-item(href="#") Fulfill
+                        a#inprogress_post_btn.dropdown-item(href="#") In progress
+                        a#complete_post_btn.dropdown-item(href="#") Complete
+                        label.ml-3 Manage Post
                         a#modify_post_btn.dropdown-item(href="#") Modify
                         a#delete_post_btn.dropdown-item(href="#") Delete
             
-            //- found user table
-            table.table.table-light.mt-2
+            //- found post table
+            table#co_post_table.table.table-light.table-hover.mt-2
+                thead
+                    tr.custom-tr
+                        th.thead-default(scope='col' colspan="7") Coordinator Posts
                 thead.thead-dark
                     tr
                         th(scope='col') #
@@ -86,23 +98,25 @@ block content
                         th(scope='col') Progress
                         th(scope='col') Date
                         th(scope='col') Course #
-                        th(scope='col') Verified
                         th(scope='col') 
-                tbody#co_post_table_body
+                tbody#co_post_table_body.table-body
 
+            table#ti_post_table.table.table-light.table-hover.mt-2
+                thead
+                    tr.custom-tr
+                        th.thead-default(scope='col' colspan="7") Interpreter Posts
                 thead.thead-dark
                     tr
                         th(scope='col') #
                         th(scope='col') Title
+                        th(scope='col') Username
                         th(scope='col') First Name
                         th(scope='col') Last Name
-                        th(scope='col') Email
-                        th(scope='col') Created Date
-                        th(scope='col') Avaliable From
-                        
+                        th(scope='col') Date
                         th(scope='col') 
-                tbody#ti_post_table_body
+                tbody#ti_post_table_body.table-body
 
+                #edit-post-panel
         #manage-statistic.content.container
             .card-deck
                 .card.border-primary.mb-3(style='max-width: 18rem;')
@@ -119,8 +133,8 @@ block content
                         .detail-box
                             image.card-detail(src="https://www.cesarsway.com/sites/newcesarsway/files/styles/large_article_preview/public/Dog-bite-prevention.jpg?itok=3N2KTNkP")
             
-                .card.border-warning.mb-3(style='max-width: 18rem;')
-                    .card-header.text-center.bg-warning
+                .card.border-primary.mb-3(style='max-width: 18rem;')
+                    .card-header.text-center.bg-primary
                         h5 Post Quality
                         label#close_card &times;
                     a#card-info.card-body.text-center(href="#")
@@ -133,8 +147,8 @@ block content
                         .detail-box
                             image.card-detail(src="https://www.cesarsway.com/sites/newcesarsway/files/styles/large_article_preview/public/Dog-bite-prevention.jpg?itok=3N2KTNkP")
 
-                .card.border-danger.mb-3(style='max-width: 18rem;')
-                    .card-header.text-center.bg-danger
+                .card.border-primary.mb-3(style='max-width: 18rem;')
+                    .card-header.text-center.bg-primary
                         h5 User Pool
                         label#close_card &times;
                     a#card-info.card-body.text-center(href="#")

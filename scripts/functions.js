@@ -100,17 +100,3 @@ function revokeApplicant(form) {
         }
     });
 }
-
-function jobComplete(form) {
-    $.ajax({
-        method: 'POST',
-        url: '/job/complete',
-        data: form.serialize(),
-        success: function(resp) {
-            if (resp.status === 'success') {
-                $(form).find('input').remove();
-                $(form).find('.status').removeClass('badge-warning').addClass('badge-success').html('Complete');
-            }
-        }
-    });
-}

@@ -10,6 +10,7 @@ block content
             .card-body
                 form.edit-post(method='POST', action='/submit-edit-post')
                     input(type='hidden', name='post_id', value=post.post_id)
+                    input(type='hidden', name='post_type', value=post_type)
                 
                     .form-group.d-flex.justify-content-between
                         .w-49
@@ -71,6 +72,7 @@ block content
             .card-body
                 form(method='POST', action='/submit-edit-post')
                     input(type='hidden', name='post_id', value=post.post_id)
+                    input(type='hidden', name='post_type', value=post_type)
                     .d-flex.justify-content-between
                         .form-group.w-49
                             label(for='title') Title:

@@ -9,15 +9,15 @@ block content
         form#new-post.form-control.bg-light(action='/new-post', method='post')
             .form-group
                 label(for='title') Title:
-                input.form-control(type='text', name='title')
+                input.form-control(type='text', name='title', required)
             .form-group
                 .d-flex.justify-content-between
                     .w-24
                         label(for='when') When:
-                        input.form-control(type='date', name='when')
+                        input.form-control(type='date', name='when', required)
                     .w-24
                         label(for='school') Where:
-                        select#schools.form-control(name='school')
+                        select#schools.form-control(name='school', required)
                             option
                     .w-24
                         label(for='course-number') Course Number:
@@ -25,7 +25,7 @@ block content
                     .w-24
                         label(for='time') Time: 
                             span.badge.badge-info(data-toggle='tooltip', data-placement='top', title='eg. 3:00 PM - 4:30 PM') ?
-                        input.form-control(type='text', name='time')
+                        input.form-control(type='text', name='time', required)
             hr
             .form-group
                 label(for='post-description') Details:
@@ -45,14 +45,14 @@ block content
                     label(for='looking-for-interpreter') I'm looking for interpreter(s)
                 .form-inline
                     label.mr-1(for='how-many-interpreter') How many?
-                    input.form-control(type='number', name='how_many_int')
+                    input.form-control(type='number', name='how_many_int', value='0', required)
             .form-inline.mb-1
                 .form-inline.mr-5
                     input.form-control.mr-1(type='checkbox', name='looking_for_transcriber')
                     label(for='looking-for-interpreter') I'm looking for transcriber(s)
                 .form-inline
                     label.mr-1(for='how-many-transcriber') How many?
-                    input.form-control(type='number', name='how_many_tra')
+                    input.form-control(type='number', name='how_many_tra', value='0', required)
             hr
             .form-inline.mb-1
                 input.form-control.mr-1(type='checkbox', name='is_screened')

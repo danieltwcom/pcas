@@ -65,6 +65,7 @@ $(document).ready(function(){
                 $("#search_post_btn").click();
                 $("#co_post_table").css("display","table");
                 $("#ti_post_table").css("display","table");
+                $("#myTab").css("display","flex");
             }
         }
     })
@@ -83,7 +84,8 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res);
                 $("#table_body").html("");
-                
+                $("#user_table").css("display","table");
+
                 if (res.status=="fail"){
                     $("#table_body").append("Fail");
                 }else if(res.status == "no user found"){
@@ -265,7 +267,7 @@ $(document).ready(function(){
     }
 
 // ****** Manage post ******
-    // --- search posts
+    // --- search posts ---
     $("#search_post_btn").click(function(){
         $.ajax({
             url:"/manage-post",
@@ -277,6 +279,8 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res);
                 $("#co_post_table_body").html("");
+                $("#co_post_table").css("display","table");
+                $("#ti_post_table").css("display","table");
                 
                 if (res.status=="fail"){
                     $("#co_post_table_body").append("Fail");
@@ -429,10 +433,16 @@ $(document).ready(function(){
             alert('Please do not select more than one post');
 
         }else if(selected_co_post.length==1){
-            location.href = "/manage-post-edit?post_id="+selected_co_post[0].value+"&post_type=coord";
+            window.open(
+                "/manage-post-edit?post_id="+selected_co_post[0].value+"&post_type=coord",
+                '_blank'
+            )
 
         }else if(selected_ti_post.length==1){
-            location.href = "/manage-post-edit?post_id="+selected_ti_post[0].value+"&post_type=ti";
+            window.open(
+                "/manage-post-edit?post_id="+selected_ti_post[0].value+"&post_type=ti",
+                '_blank'
+            )
 
         }else if((selected_co_post.length+selected_ti_post.length)==0){
             alert('Please select a post to edit')
@@ -480,36 +490,8 @@ $(document).ready(function(){
             })
         }
     }
-    // ------ Statistic -------
-    // --- card animation ---
-    $(".card").click(function(e){
-        console.log(e.target.id,$("#close_card"));
-        if(e.target.id == "close_card"){
-            $(e.currentTarget).css("position","relative")
-            $(e.currentTarget).css("max-width","18rem")
-            $(e.currentTarget).css("z-index","1")
-            $(e.currentTarget).find(".card-detail").css("display","none")
-            $(e.currentTarget).find(".card-detail").css("width","0px")
-            $(e.currentTarget).find(".card-detail").css("height","0px")
-            $(e.currentTarget).find("#card-info").css("display","block")
-            $(e.currentTarget).css("color","")
-            $(e.currentTarget).css("background-color","")
-            
-        }else{
-            $(e.currentTarget).css("position","absolute")
-            $(e.currentTarget).css("max-width","100%")
-            $(e.currentTarget).css("z-index","2")
-            $(e.currentTarget).find(".card-detail").css("display","block")
-            $(e.currentTarget).find(".card-detail").css("width","100%")
-            $(e.currentTarget).find(".card-detail").css("height","100%")
-            $(e.currentTarget).find("#card-info").css("display","none")
-            $(e.currentTarget).css("background-color","white")
-            $(e.currentTarget).css("color","black")
-        }
-        
-    });
-
-    // ------ FUNCTIONS ------
+    
+// ****** FUNCTIONS ******
     // --- alert ---
     function alert(text){
         $("#alert_box").css("display","block");

@@ -20,7 +20,11 @@ $(document).ready(function() {
             success: function(resp) {
                 if (resp.status === 'success') {
                     alertify.alert('Post successfully edited. Redirecting in 3 sec');
-                    setTimeout(function() { location.href = '/my-posts'}, 3000);
+                    if(resp.role == "admin"){
+                        setTimeout(function() { location.href = '/admin-panel'}, 3000);
+                    }else{
+                        setTimeout(function() { location.href = '/my-posts'}, 3000);
+                    }
                 }
             }
         });

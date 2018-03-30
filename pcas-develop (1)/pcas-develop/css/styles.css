@@ -1,0 +1,61 @@
+/* contains all width classes similar to bootstrap's naming convention (eg. - w-100) */
+@import 'widths.css';
+
+
+/* global */
+html {
+    height: 100vh;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0px 0px 20px 0px;
+    font-size: 16px;
+    background-color: rgb(175, 225, 255);
+}
+
+label {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn {
+    font-weight: bold;
+}
+
+.fa-input {
+    font-family: FontAwesome, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* top bar */
+.top-bar {
+    width: 100%;
+    height: 10%;
+    background-color: rgb(200, 200, 200);
+    border-bottom: 1px solid rgb(100, 100, 100);
+}
+
+/* profile.html */
+#profile-description {
+    resize: none;
+}
+
+#upload-profile-pic {
+    bottom: 15px;
+    right: 40px;
+}
+
+.form-group input[type='checkbox'], .form-inline input[type='checkbox'] {
+    width: 25px;
+    height: 25px;
+}
+
+#post-description {
+    resize: none;
+    width: 100%;
+}
+
+/* posting-details.html */
+.applicant-comment, .applicant-comment label {
+    font-size: 14px;
+}

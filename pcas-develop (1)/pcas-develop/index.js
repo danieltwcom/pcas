@@ -289,16 +289,13 @@ app.post("/resetPass",function(req,resp){
 app.post("/edit-profile",function(req,resp){
     console.log(req.body)
     if((stringRegex.test(req.body.first_name) && stringRegex.test(req.body.last_name) && stringRegex.test(req.body.location) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.other_phone) && numberRegex.test(req.body.age) && stringRegex.test(req.body.gender) )== false ){
-        resp.send({status:"fail",message:"Input invalid"})
+        resp.render('blocks/edit-profile')
         return
     }
     pool.query("UPDATE users SET first_name=$1 last_name=$2 location=$3 phone_number = $4 other_phone = $5 age = $6 gender = $7 description = $8",[req.body.first_name,req.body.last_name,req.body.location,req.body.phone,req.body.other_phone,req.body.age,req.body.gender,req.body.description],(err,res) => {
         if (err){
             console.log(err)
-            resp.send({status:"fail",message:"Update fail "})
-        }
-        if(res != undefined && res.rowCount ==1){
-            resp.send({status:"success",message:"Update success"})
+            
         }
     })
 
@@ -346,11 +343,10 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = true AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
-            console.log(c_result)
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE status = true AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
             if (err) { console.log(err); }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = true ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE status = true ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
                 if (err) { console.log(err); }
 
                 let coord_postings = c_result.rows;

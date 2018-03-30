@@ -1,0 +1,117 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/create-post.js')
+
+block content
+    h3 Create Posting
+    if user.role === 'coordinator'
+        form#new-post.form-control.bg-light(action='/new-post', method='post')
+            .form-group
+                label(for='title') Title:
+                input.form-control(type='text', name='title')
+            .form-group
+                .d-flex.justify-content-between
+                    .w-24
+                        label(for='when') When:
+                        input.form-control(type='date', name='when')
+                    .w-24
+                        label(for='school') Where:
+                        select#schools.form-control(name='school')
+                            option
+                    .w-24
+                        label(for='course-number') Course Number:
+                        input.form-control(type='text', name='course_number')
+                    .w-24
+                        label(for='time') Time: 
+                            span.badge.badge-info(data-toggle='tooltip', data-placement='top', title='eg. 3:00 PM - 4:30 PM') ?
+                        input.form-control(type='text', name='time')
+            hr
+            .form-group
+                label(for='post-description') Details:
+                textarea#post-description.form-control(name='details', rows='10', placeholder='Enter details such as specific skills or any other requirements')
+            hr
+            .form-group
+                label(for='type') Type of Request:
+                select.form-control(name='type')
+                    option(value='In Person') In Person
+                    option(value='Online (Video)') Online (Video)
+                    option(value='Over the Phone') Over the Phone
+                    option(value='Other (Please specify)') Other (Please specify)
+            hr
+            .form-inline.mb-1
+                .form-inline.mr-5
+                    input.form-control.mr-1(type='checkbox', name='looking_for_interpreter')
+                    label(for='looking-for-interpreter') I'm looking for interpreter(s)
+                .form-inline
+                    label.mr-1(for='how-many-interpreter') How many?
+                    input.form-control(type='number', name='how_many_int')
+            .form-inline.mb-1
+                .form-inline.mr-5
+                    input.form-control.mr-1(type='checkbox', name='looking_for_transcriber')
+                    label(for='looking-for-interpreter') I'm looking for transcriber(s)
+                .form-inline
+                    label.mr-1(for='how-many-transcriber') How many?
+                    input.form-control(type='number', name='how_many_tra')
+            hr
+            .form-inline.mb-1
+                input.form-control.mr-1(type='checkbox', name='is_screened')
+                label(for='is-cert') I prefer someone who is screened
+                span.badge.badge-info.ml-1(data-toggle='tooltip', data-placement='top', title='A screened user has passed the PCAS test') ?
+            .form-inline.mb-1
+                input.form-control.mr-1(type='checkbox', name='is_verified')
+                label(for='is-verified') I prefer someone who is verified
+                span.badge.badge-info.ml-1(data-toggle='tooltip', data-placement='top', title='Verified users are users who have gained reputation amongst the community') ?
+            small
+                i If none is selected, your preference will be "any"
+            .form-group.d-flex.justify-content-end
+                button.btn.btn-primary.mr-1(type='submit') Create
+                button.btn.btn-secondary(type='reset') Clear
+    else if user.role === 'ti'
+        form#new-post.form-control.bg-light(action='/new-post', method='post')
+            .form-group
+                label(for='title') Title:
+                input.form-control(type='text', name='title', required)
+            .form-group
+                label(for='time') Time Available:
+                input.form-control(type='text', name='time', placeholder='e.g. "3:00 PM - 4:00 PM", "Please ask", etc.', required)
+            .form-group.form-inline
+                .w-25
+                    label.justify-content-start(for='recurring') Recurring:
+                    select.form-control(name='recurring', required)
+                        option(value='Once') Once
+                        option(value='Weekly') Weekly
+                        option(value='Monthly') Monthly
+                .w-25#starting
+                    label.justify-content-start(for='starting') Starting:
+                    input.form-control(type='date', name='starting', required)
+                #date-picker.w-50
+                    label.justify-content-start(for='days_available') Days Available:
+                    .d-flex.justify-content-between
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Mon')
+                            label(for='mon') Mon
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Tue')
+                            label(for='tue') Tue
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Wed')
+                            label(for='wed') Wed
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Thu')
+                            label(for='thu') Thu
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Fri')
+                            label(for='fri') Fri
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Sat')
+                            label(for='sat') Sat
+                        .form-inline
+                            input.form-control.mr-1(type='checkbox', name='days', value='Sun')
+                            label(for='sun') Sun
+            .form-group
+                label(for='details') Details:
+                textarea.form-control.w-100(name='details', rows='6')
+            .text-right
+                input.btn.btn-primary.mr-1(type='submit', value='Submit')
+                input.btn.btn-secondary(type='reset', value='Clear')

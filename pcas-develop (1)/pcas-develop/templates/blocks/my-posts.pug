@@ -1,0 +1,61 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/my-posts.js')
+
+block content
+    h3 My Posts
+    .card
+        .card-body.bg-light
+            .d-flex.justify-content-between
+                .w-55
+                    strong Title
+                .w-15
+                    strong Posted On
+                .w-10
+                    strong Status
+                .w-10            
+                .w-15
+            each val, index in posts
+                .d-flex.justify-content-between.align-items-center.mb-2
+                    .w-55
+                        a(href='/posting-details/?post_id=' + posts[index].post_id + '&role=' + user.role) [##{posts[index].post_id}] #{posts[index].title}
+                    .w-15
+                        | #{posts[index].date_created.toDateString()}
+                    if posts[index].progress === 'Open'
+                        .w-10
+                            span.badge.badge-primary.status Open
+                        .w-10
+                    else if posts[index].progress === 'In Progress'
+                        form.form-inline.w-20.job-complete(method='POST', action='/job/complete')
+                            .w-50
+                                span.badge.badge-warning.status In Progress
+                            .w-50
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-primary(type='submit', value='Complete?')
+                    else if posts[index].progress === 'Complete'
+                        .w-10
+                            span.badge.badge-success.status Complete
+                        .w-10
+                    .w-15.d-flex.justify-content-end
+                        if posts[index].status === false
+                            form.activate(action='/activate-post', method='POST')
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-primary.mr-1(type='submit', value='Show')
+                        else
+                            form.deactivate(action='/deactivate-post', method='POST')
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-danger.mr-1(type='submit', value='Hide')
+                        button.btn.btn-sm.btn-info.mr-1(type='button', onclick='location.href="/edit-post?post_id=' + posts[index].post_id + '"') Edit
+                        form.delete-post(action='/delete-post', method='POST')
+                            input(type='hidden', name='post_id', value=posts[index].post_id)
+                            input.btn.btn-sm.btn-danger(type='submit', value='Delete')
+            //--form.my-post(action='/delete-post', method='post')
+                .d-flex.justify-content-between.align-items-center.mb-2
+                    .w-65
+                        a(href='/posting') [#10304] Need Interpreter at SFU
+                    .w-25.text-right
+                        strong Posted on January 29, 2017
+                    .w-15.text-right
+                        button.btn.btn-sm.btn-info.mr-1(type='button') Edit
+                        button.btn.btn-sm.btn-danger(type='submit') Delete

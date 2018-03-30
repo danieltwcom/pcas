@@ -1,0 +1,87 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/postings.js')
+
+block content
+    - function convertDate(date) {return date.toLocaleDateString();}
+    h3 Postings
+    ul.nav.nav-tabs
+        li.nav-item
+            a.nav-link.active#help-tab(href='#help', data-toggle='tab', role='tab', aria-controls='help', aria-selected='true') I am looking for help
+        li.nav-item
+            a.nav-link#work-tab(href='#work', data-toggle='tab', role='tab', aria-controls='work', aria-selected='true') I am looking for work
+    .tab-content
+        .tab-pane.fade.show.active#help(role='tabpanel', aria-labelledby='help-tab')
+            .card
+                .card-body.bg-light
+                    .d-flex.justify-content-between.mb-2
+                        .w-25
+                            strong Looking For
+                        .w-35
+                            strong Title
+                        .w-15
+                            strong Posted on
+                        .w-25
+                            strong Location
+                    #help-postings
+                        each val, index in coord_postings
+                            .d-flex.justify-content-between.mb-2
+                                .w-25
+                                    if coord_postings[index].verified
+                                        span.badge.badge-success.mr-1 Verified
+                                    if coord_postings[index].screened
+                                        span.badge.badge-success.mr-1 Screened
+                                    - var iNum = parseInt(coord_postings[index].num_of_interpreter);
+                                    - var tNum = parseInt(coord_postings[index].num_of_transcriber);
+                                    if iNum > 0
+                                        span.badge.badge-primary.mr-1 Interpreter(s)
+                                    if tNum > 0
+                                        span.badge.badge-primary.mr-1 Transcriber(s)
+                                .w-35
+                                    a(href='/posting-details?post_id=' + coord_postings[index].post_id + '&role=' + coord_postings[index].role) [##{coord_postings[index].post_id}] #{coord_postings[index].title}
+                                .w-15 #{coord_postings[index].date_created.toDateString()}
+                                .w-25 #{coord_postings[index].school}
+        .tab-pane.fade#work(role='tabpanel', arialabelledby='work-tab')
+            .card
+                .card-body.bg-light
+                    .d-flex.justify-content-between.mb-2
+                        .w-35
+                            strong Title
+                        .w-35
+                            strong Available
+                        .w-15
+                            strong Starting
+                        .w-15
+                            strong Posted By
+                    #work-postings
+                        each val, index in ti_postings
+                            - var daysArray = ti_postings[index].days_available.split(', ')
+                            .d-flex.justify-content-between.mb-2
+                                .w-35
+                                    a(href='/posting-details?post_id=' + ti_postings[index].post_id + '&role=' + ti_postings[index].role) [##{ti_postings[index].post_id}] #{ti_postings[index].title}
+                                .w-35
+                                    - var mon = daysArray.indexOf('Mon')
+                                    - var tue = daysArray.indexOf('Tue')
+                                    - var wed = daysArray.indexOf('Wed')
+                                    - var thu = daysArray.indexOf('Thu')
+                                    - var fri = daysArray.indexOf('Fri')
+                                    - var sat = daysArray.indexOf('Sat')
+                                    - var sun = daysArray.indexOf('Sun')
+                                    if mon !== -1
+                                        span.badge.badge-success.mr-1 Monday
+                                    if tue !== -1
+                                        span.badge.badge-secondary.mr-1 Tuesday
+                                    if wed !== -1
+                                        span.badge.badge-danger.mr-1 Wednesday
+                                    if thu !== -1
+                                        span.badge.badge-warning.mr-1 Thursday
+                                    if fri !== -1
+                                        span.badge.badge-info.mr-1 Friday
+                                    if sat !== -1
+                                        span.badge.badge-dark.mr-1 Saturday
+                                    if sun !== -1
+                                        span.badge.badge-primary.mr-1 Sunday
+                                .w-15 #{ti_postings[index].starting.toDateString()}
+                                .w-15
+                                    a(href='/profile?user_id=' + ti_postings[index].user_id) #{ti_postings[index].username}

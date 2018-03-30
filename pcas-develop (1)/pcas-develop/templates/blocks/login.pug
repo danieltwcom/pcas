@@ -1,0 +1,23 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/login.js')
+
+block content
+    .card.w-25.mx-auto
+        .card-body
+            if message
+                .alert.alert-danger #{message}
+            if varify
+                a.btn.btn-primary.btn-sm.active(href='/varify') #{varify}
+            form(action='/login', method='post')
+                .form-group
+                    label(for='username') Username:
+                    input.form-control(type='text', name='username')
+                .form-group
+                    label(for='password') Password:
+                    input.form-control(type='password', name='password')
+                    a(href='/forgetPass') Forgot Password
+                .form-group.d-flex.justify-content-end
+                    input.btn.btn-primary.mr-1(type='submit', value='Login')
+                    button#registration-button.btn.btn-info(type='button') Register

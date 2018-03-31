@@ -628,7 +628,7 @@ app.post('/apply-options', function(req, resp) {
 
 app.post('/submit-edit-post', function(req, resp) {
     if (req.session.username) {
-        if (req.session.role === 'coordinator') {
+        if (req.session.role === 'coordinator' || (req.session.role === 'admin' && req.body.post_type=="coord")) {
             if (req.body.screened) {
                 var screened = true;
             } else {
@@ -647,10 +647,10 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
-        } else if (req.session.role === 'ti') {
+        } else if (req.session.role === 'ti' || (req.session.role === 'admin' && req.body.post_type=="ti")) {
             var daysAvailable = req.body.days.join(', ');
             var queryString = 'UPDATE ti_postings SET title = $1, time_available = $2, starting = $3, recurring = $4, days_available = $5, details = $6 WHERE post_id = $7';
             pool.query(queryString, [req.body.title, req.body.time, req.body.starting, req.body.recurring, daysAvailable, req.body.details, req.body.post_id], function(err, result) {
@@ -658,7 +658,7 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
         }
@@ -1061,7 +1061,7 @@ app.get("/admin-panel",function(req,res){
     }
 })
 
-// --- manage user ---
+// ------ manage user ------
 app.post("/manage-user",function(req,res){
     // search user
     if(req.body.type == "get"){
@@ -1195,7 +1195,7 @@ app.post("/manage-user",function(req,res){
     }
 })
 
-// --- manage post ---
+// ------ manage post -------
 app.get('/manage-post-edit',function(req,resp){
     if (req.session.username && req.session.role=="admin") {
         if(req.query.post_type=="coord"){
@@ -1345,6 +1345,120 @@ function set_post_progress(req,res){
         }
     })
 }
+
+// ----- get data -------
+app.post('/data',function(req,res){
+    if(req.body.type=="school"){
+        pool.query('select count(post_id),school from coord_postings group by school order by count desc',[],function(err,result){
+            if(err){res.send('err')}
+            else if(result){
+                res.send({
+                    status:"success",
+                    schools:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post"){
+        pool.query('select (select count(*) from ti_postings) as ti_post_count,(select count(*) from coord_postings) as co_post_count from coord_postings limit 1',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="co-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from coord_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from ti_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post_status"){
+        pool.query('select count(*),progress from coord_postings group by progress',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post-progress"){
+        pool.query("select count(*),progress from coord_postings group by progress order by case when progress='Open' then 1 When progress='Fulfilled' then 2 when progress='In Progress' then 3 when progress='Complete' then 4 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="user-type"){
+        pool.query("select count(*),role from users group by role order by case when role='coordinator' then 1 when role='ti' then 2 when role='admin' then 3 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-demand"){
+        pool.query("select sum(num_of_transcriber) as d_trans, sum(num_of_interpreter) as d_inter,to_char(date_created,'YYYY-MM') as month from coord_postings group by month",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+    
+})
 
 
 // --------------Server listening --------------

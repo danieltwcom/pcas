@@ -53,16 +53,18 @@
 }
 
 #manage-statistic{
-    display: none;
+    display: block;
 }
 
 .card:hover ,.card:hover a{
     background-color:rgba(109, 109, 109, 0.5);
-    color:white;
+    /* color:white; */
+    transition: 0s;
 }
 
-.card{
+.card , .card-header:first-child{
     transition: 0.5s;
+    border-radius: 0;
 }
 
 .card a{
@@ -70,7 +72,17 @@
     text-decoration: none;
 }
 
-#close_card{
+.custom-card-text{
+    display: none;
+    position: absolute;
+    color:white;
+    right:0px;
+    bottom:0px;
+    font-size: 13px;
+}
+
+.close_card{
+    display: none;
     font-size: 1.5em;
     position: absolute;
     right:3px;
@@ -78,9 +90,11 @@
 }
 
 .card-detail{
+    overflow-y: auto;    
     display: none;
     width: 0px;
     height:0px;
+    max-height: 85vh;
     transition: 0.3s;
 }
 
@@ -100,3 +114,47 @@
     padding:0px;
 }
 
+#myTab{
+    display: none;
+}
+
+.nav-tabs .nav-link , .nav-tabs .nav-item , .nav-tabs , .nav-link , .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active{
+    border:none;
+    margin-bottom: 0px;
+}
+
+.nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active{
+    background-color: #ffc107;
+
+}
+
+.nav-link{
+    background-color: white;
+}
+
+
+.graph-detail-wrap{
+    width:85vw;
+}
+
+.graph-detail-row{
+    border:1px solid black
+}
+
+.graph-detail-box{
+    display: inline-block;
+    width:50%;
+    height:50%;
+}
+
+.graph-detail-box-lg{
+    display: inline-block;
+    width:100%;
+    height:50%;
+}
+
+.graph-detail-box-md{
+    display: inline-block;
+    width:75%;
+    height:50%;
+}

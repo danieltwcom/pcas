@@ -26,10 +26,10 @@ if (process.env.NODE_ENV === 'production') {
     pool.connect();
 } else {
     var pool = new pg.Pool({
-        user: process.env.PG_USER,
+        user: process.env.PGSQL_USER,
         host: process.env.DATABASE_URL,
-        password:process.env.PG_PASSWORD,
-        database: process.env.DATABASE,
+        password:process.env.PGSQL_PASSWORD,
+        database: process.PGSQL_DATABASE.DATABASE,
         max:process.env.PGSQL_MAX,
         port: process.env.DB_PORT
     });

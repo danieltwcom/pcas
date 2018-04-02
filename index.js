@@ -353,14 +353,19 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') AND is_archived = false ORDER BY coord_postings.date_created ASC", function(err, result) {
             if (err) { console.log(err); }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
+            if (result !== undefined) {
+                var coord_postings = result.rows;
+            }
+
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false AND is_archived = false ORDER BY ti_postings.date_created ASC', function(err, result) {
                 if (err) { console.log(err); }
 
-                let coord_postings = c_result.rows;
-                let ti_postings = ti_result.rows;
+                if (result !== undefined) {
+                    var ti_postings = result.rows;
+                }
 
                 resp.render('postings', {user: req.session, coord_postings: coord_postings, ti_postings: ti_postings});
             });
@@ -759,13 +764,13 @@ app.post('/deactivate-post', function(req, resp) {
     }
 });
 
-app.post('/delete-post', function(req, resp) {
+app.post('/archive-post', function(req, resp) {
     console.log(req.body);
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1 RETURNING post_id';
+            var queryString = 'UPDATE coord_postings SET is_archived = true WHERE post_id = $1 RETURNING post_id';
         } else if (req.session.role === 'ti') {
-            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1 RETURNING post_id';
+            var queryString = 'UPDATE ti_postings SET is_archived = true WHERE post_id = $1 RETURNING post_id';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {

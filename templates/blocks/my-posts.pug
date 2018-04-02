@@ -60,9 +60,12 @@ block content
                                 input(type='hidden', name='post_id', value=posts[index].post_id)
                                 input.btn.btn-sm.btn-danger.mr-1(type='submit', value='Hide')
                         button.btn.btn-sm.btn-info.mr-1(type='button', onclick='location.href="/edit-post?post_id=' + posts[index].post_id + '"') Edit
-                        form.delete-post(action='/delete-post', method='POST')
-                            input(type='hidden', name='post_id', value=posts[index].post_id)
-                            input.btn.btn-sm.btn-danger(type='submit', value='Delete')
+                        if posts[index].is_archived === false
+                            form.delete-post(action='/archive-post', method='POST')
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-danger(type='submit', value='Archive')
+                        else
+                            button.btn.btn-sm.btn-danger(type='button', disabled) Archived
             //--form.my-post(action='/delete-post', method='post')
                 .d-flex.justify-content-between.align-items-center.mb-2
                     .w-65

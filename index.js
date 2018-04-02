@@ -390,7 +390,7 @@ app.get('/my-applications', function(req, resp) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});
-            } else if (result !== undefined && result.rows.length > 0) {
+            } else if (result !== undefined) {
                 resp.render('blocks/my-applications', {user: req.session, applications: result.rows});
             }
         });

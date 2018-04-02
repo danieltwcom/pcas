@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const pg = require("pg");
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const randomstring = require('randomstring');
 const mailer = require('./js/mailer')
@@ -27,6 +28,15 @@ var pool = new pg.Pool({
 	max:process.env.PGSQL_MAX,
     port: process.env.DB_PORT
 });
+
+// ---- Node Mailer setup ---- //
+let transporter = nodemailer.createTransport({
+    service:"gmail",
+    auth:{
+        user:'pcasnotification@gmail.com',
+        pass:'pcaspassword'
+    }
+})
 
 // initialize body parser
 app.use(bodyParser.urlencoded({
@@ -170,11 +180,11 @@ app.get("/verify",function(req,resp){
                     console.log(err)
                     resp.render('blocks/verify',{message:'Unable to verify account'})
                 } else {
-                    resp.render('blocks/login',{message:'Verify success. Thank you! Now you may login'})
+                    resp.render('blocks/login',{message:'Verification successful'})
                 }
             })
         } else {
-             resp.render('blocks/verify', {message:'Varificaion fail'})
+             resp.render('blocks/verify', {message:'Verificaion fail'})
         }
         if(res == undefined | res.rowCount==0){
             resp.render('blocks/verify',{message:"Account does not exist"})
@@ -327,7 +337,7 @@ app.get('/profile', function(req, resp) {
             if (result !== undefined && result.rows.length > 0) {
                 pool.query('SELECT * FROM upvotes', function(err, result) {
                     if (err) { console.log(err); }
-                    resp.render('blocks/profile', {user: profile, upvotes: result.rows});
+                    resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows});
                 });
             }
         });
@@ -346,11 +356,10 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = true AND progress NOT IN ('In Progress', 'Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
-            console.log(c_result)
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
             if (err) { console.log(err); }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = true ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
                 if (err) { console.log(err); }
 
                 let coord_postings = c_result.rows;
@@ -410,6 +419,7 @@ app.get('/posting-details', function(req, resp) {
     
                 if (result !== undefined && result.rows.length > 0) {
                     var coordPosting = result.rows[0];
+                    console.log(coordPosting);
     
                     pool.query('SELECT * FROM applicants JOIN users ON users.user_id = applicants.applicant_id WHERE applicants.post_id = $1 ORDER BY users.username', [postId], function(err, result) {
                         if (err) { console.log(err); }
@@ -459,18 +469,38 @@ app.get('/forgetPass',function(req,resp){
     resp.render('blocks/forget-pass')
 })
 
-app.get('/inbox', function(req, resp) {
+app.get('/messages', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/inbox', {user: req.session});
+        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            var outbox = result.rows;
+
+            pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+                if (err) { console.log(err); }
+
+                var inbox = result.rows;
+
+                resp.render('blocks/messages', {user: req.session, outbox: outbox, inbox: inbox});
+            });
+        });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
 });
 
 
-app.get('/message', function(req, resp) {
+app.get('/compose', function(req, resp) {
     if (req.session.username) {
-        resp.render('dev/message', {user: req.session});
+        resp.render('blocks/compose', {user: req.session});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
+
+app.get('/message-details', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/message-details', {user: req.session});
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -503,7 +533,15 @@ app.get('/edit-post', function(req, resp) {
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
-})
+});
+
+app.get('/sent', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/message-sent', {message: 'Message has been sent'});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
 
 //--- Non-Routes
 app.get('/get-schools', function(req, resp) {
@@ -529,14 +567,6 @@ app.get('/select-school', function(req, resp) {
 });
 //--- End Non-Routes
 
-app.get('/post-created', function(req, resp) {
-    if (req.session.username) {
-        resp.render('blocks/post-created', {message: 'Post successfully created'});
-    } else {
-        resp.render('blocks/login', {message: "You're not logged in"});
-    }
-});
-
 app.post('/upload-profile-pic', function(req, resp) {
     let uploadProfilePic = upload.single('profile_pic');
 
@@ -556,7 +586,7 @@ app.post('/upload-profile-pic', function(req, resp) {
                 if (err) { console.log(err); }
                 
                 req.session.avatar_url = result.rows[0].avatar_url;
-                resp.redirect('/profile');
+                resp.redirect('/profile?user_id=' + req.session.user_id);
             })
         } else {
             resp.send({status: 'invalid file type'});
@@ -601,7 +631,7 @@ app.post('/apply-options', function(req, resp) {
 
 app.post('/submit-edit-post', function(req, resp) {
     if (req.session.username) {
-        if (req.session.role === 'coordinator') {
+        if (req.session.role === 'coordinator' || (req.session.role === 'admin' && req.body.post_type=="coord")) {
             if (req.body.screened) {
                 var screened = true;
             } else {
@@ -620,10 +650,10 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
-        } else if (req.session.role === 'ti') {
+        } else if (req.session.role === 'ti' || (req.session.role === 'admin' && req.body.post_type=="ti")) {
             var daysAvailable = req.body.days.join(', ');
             var queryString = 'UPDATE ti_postings SET title = $1, time_available = $2, starting = $3, recurring = $4, days_available = $5, details = $6 WHERE post_id = $7';
             pool.query(queryString, [req.body.title, req.body.time, req.body.starting, req.body.recurring, daysAvailable, req.body.details, req.body.post_id], function(err, result) {
@@ -631,7 +661,7 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
         }
@@ -697,9 +727,9 @@ app.post('/accept-applicant', function(req, resp) {
 app.post('/activate-post', function(req, resp) {
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'UPDATE coord_postings SET status = true WHERE post_id = $1';
+            var queryString = 'UPDATE coord_postings SET is_hidden = false WHERE post_id = $1';
         } else if (req.session.role === 'ti') {
-            var queryString = 'UPDATE ti_postings SET status = true WHERE post_id = $1';
+            var queryString = 'UPDATE ti_postings SET is_hidden = false WHERE post_id = $1';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -716,9 +746,9 @@ app.post('/activate-post', function(req, resp) {
 app.post('/deactivate-post', function(req, resp) {
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'UPDATE coord_postings SET status = false WHERE post_id = $1';
+            var queryString = 'UPDATE coord_postings SET is_hidden = true WHERE post_id = $1';
         } else if (req.session.role === 'ti') {
-            var queryString = 'UPDATE ti_postings SET status = false WHERE post_id = $1';
+            var queryString = 'UPDATE ti_postings SET is_hidden = true WHERE post_id = $1';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -733,11 +763,12 @@ app.post('/deactivate-post', function(req, resp) {
 });
 
 app.post('/delete-post', function(req, resp) {
+    console.log(req.body);
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1';
+            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1 RETURNING post_id';
         } else if (req.session.role === 'ti') {
-            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1';
+            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1 RETURNING post_id';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {
@@ -745,9 +776,48 @@ app.post('/delete-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                resp.send({status: 'success'});
+                resp.send({status: 'success', id: result.rows[0].post_id});
             }
         });
+    }
+});
+
+app.post('/change-progress', function(req, resp) {
+    if (req.session.username) {
+        if (req.body.progress !== 'Open') {
+            pool.query('SELECT * FROM applicants WHERE post_id = $1 AND accepted = true', [req.body.post_id], function(err, result) {
+                if (err) {
+                    console.log(err);
+                    resp.send({status: 'fail'});
+                } else if (result !== undefined) {
+                    if (result.rows.length === 0) {
+                        resp.send({status: 'empty'});
+                    } else {
+                        if (req.body.progress === 'Complete') {
+                            pool.query('UPDATE applicants SET is_complete = true WHERE post_id = $1', [req.body.post_id]);
+                        } else {
+                            pool.query('UPDATE applicants SET is_complete = false WHERE post_id = $1', [req.body.post_id]);
+                        }
+
+                        pool.query('UPDATE coord_postings SET progress = $1 WHERE post_id = $2 RETURNING post_id, progress', [req.body.progress, req.body.post_id], function(err, result) {
+                            if (err) { console.log(err); }
+
+                            if (result !== undefined && result.rowCount > 0) {
+                                resp.send({status: 'success', post_id: result.rows[0].post_id, progress: result.rows[0].progress});
+                            }
+                        });
+                    }
+                }
+            });
+        } else {
+            pool.query('UPDATE coord_postings SET progress = $1 WHERE post_id = $2 RETURNING post_id, progress', [req.body.progress, req.body.post_id], function(err, result) {
+                if (err) { console.log(err); }
+
+                if (result !== undefined && result.rowCount > 0) {
+                    resp.send({status: 'success', post_id: result.rows[0].post_id, progress: result.rows[0].progress});
+                }
+            });
+        }
     }
 });
 
@@ -827,6 +897,19 @@ app.post('/application/:status', function(req, resp) {
     }
 });
 
+app.post('/send-message', function(req, resp) {
+    if (req.session.username) {
+        pool.query('INSERT INTO messages (sender, subject, message, recipient) VALUES ($1, $2, $3, $4)', [req.body.sender, req.body.subject, req.body.message, req.body.recipient], function(err, result) {
+            if (err) {
+                console.log(err);
+                resp.send({status: 'fail'});
+            } if (result !== undefined && result.rowCount > 0) {
+                resp.send({status: 'success'});
+            }
+        });
+    }
+});
+
 app.post('/revoke-applicant', function(req, resp) {
     if (req.session.username) {
         pool.query('UPDATE applicants SET accepted = false WHERE application_id = $1', [req.body.application_id], function(err, result) {
@@ -837,6 +920,30 @@ app.post('/revoke-applicant', function(req, resp) {
                 resp.send({status: 'success'});
             }
         });
+    }
+});
+
+/* app.post('/job/start', function(req, resp) {
+    if (req.session.username) {
+        if (req.session.role === 'coordinator') {
+            pool.query('SELECT * FROM applicants WHERE post_id = $1 AND accepted = true', [req.body.post_id], function(err, result) {
+                if (err) { console.log(err) }
+                console.log(result);
+
+                if (result !== undefined && result.rows.length === 0) {
+                    resp.send({status: 'empty'});
+                } else {
+                    pool.query("UPDATE coord_postings SET progress = 'In Progress' WHERE post_id = $1", [req.body.post_id], function(err, result) {
+                        if (err) {
+                            console.log(err);
+                            resp.send({status: 'fail'});
+                        } else if (result !== undefined && result.rowCount > 0) {
+                            resp.send({status: 'success'});
+                        }
+                    });
+                }
+            });
+        }
     }
 });
 
@@ -860,7 +967,7 @@ app.post('/job/complete', function(req, resp) {
             });
         }
     }
-});
+}); */
 
 app.get('/logout', function(req, resp) {
     req.session = null;
@@ -879,6 +986,30 @@ app.get('/pleaseVerify',function(req,resp){
 
 // Create
 app.post('/new-post', function(req, resp) {
+    function new_post_notification(mail_title){
+        pool.query("SELECT email FROM users WHERE email_notification = true",[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+            }else {
+                for(i=0;i<result.rows.length;i++){
+                    let mailOptions = {
+                        from:'pcasnotification@gmail.com',
+                        to: result.rows[i].email,
+                        subject:mail_title,
+                        text:"Check out the post here: "+"post_url"// todo
+                    }
+                    transporter.sendMail(mailOptions,function(err,info){
+                        if(err){
+                            console.log(err)
+                        }else{
+                            console.log('Email sent: '+ info.response);
+                        }
+                    })
+                }   
+            }
+        }) 
+    }
     if (req.session.role === 'coordinator') {
         if (req.body.is_verified) {
             var isVerified = true;
@@ -892,11 +1023,12 @@ app.post('/new-post', function(req, resp) {
             var isScreened = false;
         }
 
-        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, hideEmail, hidePhone], function(err, result) {
+        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day, course_number, time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, req.body.course_number, req.body.time], function(err, result) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
+                new_post_notification("[New Post] "+req.body.title);
                 resp.send({status: 'success'});
             }
         });
@@ -908,11 +1040,386 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
+                new_post_notification("[New Post] "+req.body.title);
                 resp.send({status: 'success'});
             }
         });
     }
 });
+
+app.get('/post-created', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/post-created', {user: req.session});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
+
+// ------------- Admin Panel --------------
+app.get("/admin-panel",function(req,res){
+    if(req.session.role === 'admin'){
+        res.render("blocks/admin-panel");
+    }else{
+        res.render("blocks/login", {message:"Please login as admin"});
+    }
+})
+
+// ------ manage user ------
+app.post("/manage-user",function(req,res){
+    // search user
+    if(req.body.type == "get"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT * FROM users WHERE username LIKE $1 OR email LIKE $1 OR CAST(user_id as varchar) =$2 ORDER BY user_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no user found"});
+            }
+        })
+    }
+    // verify user
+    if(req.body.type == "verify"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET is_verified = true WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+    // screen user
+    if(req.body.type == "screen"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET is_screened = true WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+    // delete user
+    if(req.body.type == "delete"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("DELETE FROM upvotes WHERE voter_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                pool.query("DELETE FROM users WHERE user_id IN "+user_arr_sql
+                ,[]
+                ,function(err,result){
+                    if(err){
+                        console.log(err);
+                        res.send({status:"fail"});
+                    }else{
+                        res.send({
+                            status:"success",
+                            row_updated:result.rowCount,
+                        })
+                    }
+                })
+            }
+        })
+        
+    }
+    // promote user
+    if(req.body.type == "promote"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET role='admin' WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+                res.send({
+                    status:"fail"
+                })
+            }else {
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount
+                })
+            }
+        })
+    }
+})
+
+// ------ manage post -------
+app.get('/manage-post-edit',function(req,resp){
+    if (req.session.username && req.session.role=="admin") {
+        if(req.query.post_type=="coord"){
+            console.log("coord")
+            var queryString = 'SELECT * FROM coord_postings WHERE post_id = $1';
+        }else if(req.query.post_type=="ti"){
+            console.log("ti")
+            var queryString = 'SELECT * FROM ti_postings WHERE post_id = $1';
+        }
+        console.log(queryString);
+
+        pool.query(queryString, [req.query.post_id], function(err, result) {
+            if (err) { console.log(err); }
+
+            if (result !== undefined) {
+                console.log(result.rows.length)
+                resp.render('blocks/edit-post', {user: req.session,post_type:req.query.post_type, post: result.rows[0]});
+            }
+        })
+    }else{
+        resp.render('block/login')
+    }
+})
+app.post("/manage-post",function(req,res){
+    // search post from coordinator postings
+    if(req.body.type=="get-co"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE title LIKE $1 OR CAST(post_id as varchar) = $2 ORDER BY post_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no post found"});
+            }
+        })
+    }
+    // search post from interpreter postings
+    if(req.body.type=="get-ti"){
+        let match_input = "%"+req.body.input_value+"%";
+        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (title LIKE $1 OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
+        ,[match_input,req.body.input_value]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else if (result.rows.length > 0 ){
+                res.send(result.rows);
+            }else if(result.rows.length == 0){
+                res.send({status:"no post found"});
+            }
+        })
+    }
+    // delete post
+    if(req.body.type=="delete"){
+        let co_post_array = [];
+        let ti_post_array = [];
+        let co_post_arr_sql = "(0)";
+        let ti_post_arr_sql = "(0)";
+
+        if(req.body.co_post_array){
+            co_post_array = req.body.co_post_array
+            co_post_arr_sql = "("
+        }
+
+        if(req.body.ti_post_array){
+            ti_post_array = req.body.ti_post_array
+            ti_post_arr_sql = "("
+        }
+        
+        for(i=0; i<co_post_array.length;i++){
+            if(i==co_post_array.length-1){
+                co_post_arr_sql+=co_post_array[i]+")"
+            }else{
+                co_post_arr_sql+=co_post_array[i]+","
+            }
+        }
+        for(i=0; i<ti_post_array.length;i++){
+            if(i==co_post_array.length-1){
+                ti_post_arr_sql+=ti_post_array[i]+")"
+            }else{
+                ti_post_arr_sql+=ti_post_array[i]+","
+            }
+        }
+        console.log(ti_post_arr_sql,co_post_arr_sql);
+        pool.query("DELETE FROM coord_postings WHERE post_id IN "+co_post_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                pool.query("DELETE FROM ti_postings WHERE post_id IN "+ti_post_arr_sql
+                ,[]
+                ,function(err,result){
+                    if(err){
+                        console.log(err);
+                        res.send({status:"fail"});
+                    }else{
+                        res.send({
+                            status:"success",
+                            row_updated:co_post_array.length+ti_post_array.length,
+                        })
+                    }
+                })
+            }
+        })
+     
+    }
+})
+
+app.post("/set-post-progress",function(req,res){
+    set_post_progress(req,res);
+})
+
+function set_post_progress(req,res){
+    let co_post_array = [];
+    let co_post_arr_sql = "(0)";
+
+    if(req.body.co_post_array){
+        co_post_array = req.body.co_post_array
+        co_post_arr_sql = "("
+    }
+
+    for(i=0; i<co_post_array.length;i++){
+        if(i==co_post_array.length-1){
+            co_post_arr_sql+=co_post_array[i]+")"
+        }else{
+            co_post_arr_sql+=co_post_array[i]+","
+        }
+    }
+
+    let query = "UPDATE coord_postings SET progress=$1 WHERE post_id IN "+co_post_arr_sql;
+
+    pool.query(query,[req.body.status],function(err,result){
+        if(err){
+            console.log(err);
+            res.send({status:"fail"});
+        }else{
+            res.send({
+                status:"success",
+                row_updated:co_post_array.length,
+            })
+        }
+    })
+}
+
+// ----- get data -------
+app.post('/data',function(req,res){
+    if(req.body.type=="school"){
+        pool.query('select count(post_id),school from coord_postings group by school order by count desc',[],function(err,result){
+            if(err){res.send('err')}
+            else if(result){
+                res.send({
+                    status:"success",
+                    schools:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post"){
+        pool.query('select (select count(*) from ti_postings) as ti_post_count,(select count(*) from coord_postings) as co_post_count from coord_postings limit 1',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="co-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from coord_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from ti_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post_status"){
+        pool.query('select count(*),progress from coord_postings group by progress',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+})
+
 
 // --------------Server listening --------------
 server.listen(port, function (err) {

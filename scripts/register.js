@@ -165,6 +165,7 @@ $(document).ready(function() {
 				return;
 			} 
 		}
+
 		$.ajax({
             url:"/register",
             type:"post",

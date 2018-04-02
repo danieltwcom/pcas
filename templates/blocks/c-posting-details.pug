@@ -21,9 +21,9 @@ block content
                     |  #{post.school}
                     hr
                     label.d-block(for='preferred') Preferred:
-                    if post.screened
+                    if post.screened === true
                         span.badge.badge-success.mr-1 Screened
-                    if post.verified
+                    if post.verified === true
                         span.badge.badge-success.mr-1 Verified
                     hr
                     label.d-block(for='looking-for') Looking For:
@@ -55,10 +55,14 @@ block content
                             if applicant[i].accepted === true
                                 - acceptedNum++
                         h3 [##{post.post_id}] #{post.title}
-                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber))
-                                span.badge.badge-primary.ml-1 Fulfilled
-                            else
-                                span.badge.badge-success.ml-1 Open
+                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber)) || post.progress === 'Fulfilled'
+                                span.badge.badge-info.ml-1 Fulfilled
+                            else if post.progress === 'Open'
+                                span.badge.badge-primary.ml-1 Open
+                            else if post.progress === 'In Progress'
+                                span.badge.badge-warning.ml-1 In Progress
+                            else if post.progress === 'Complete'
+                                span.badge.badge-success.ml-1 Complete
                         strong
                             | Posted on #{post.date_created.toDateString()} by 
                             a(href='/profile?user_id=' + post.user_id) #{post.username}
@@ -104,7 +108,8 @@ block content
                                                     input(type='hidden', name='voter_id', value=applicant[index].user_id)
                                                     input(type='hidden', name='voted_user_id', value=applicant[index].applicant_id)
                                                     input.btn.btn-info.btn-sm(type='submit', value='Upvote User')
-                                            button.btn.btn-sm.btn-primary.mr-1(type='button') Send Message
+                                            a(href='mailto:' + applicant[index].email)
+                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Email
                                             if applicant[index].accepted === false
                                                 form.accept-applicant(method='POST', action='/accept-applicant')
                                                     input(type='hidden', name='application_id', value=applicant[index].application_id)
@@ -122,7 +127,7 @@ block content
                                         label(for='comment') Comment:
                                         |  #{applicant[index].comments}
                         else
-                            .alert.alert-info.text-center
+                            .alert.alert-warning.text-center
                                 h4 There are no applicants
             else if user.role === 'ti'
                 .card

@@ -299,13 +299,16 @@ app.post("/resetPass",function(req,resp){
 app.post("/edit-profile",function(req,resp){
     console.log(req.body)
     if((stringRegex.test(req.body.first_name) && stringRegex.test(req.body.last_name) && stringRegex.test(req.body.location) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.other_phone) && numberRegex.test(req.body.age) && stringRegex.test(req.body.gender) )== false ){
-        resp.render('blocks/edit-profile')
+        resp.send({status:"fail",message:"Input invalid"})
         return
     }
     pool.query("UPDATE users SET first_name=$1 last_name=$2 location=$3 phone_number = $4 other_phone = $5 age = $6 gender = $7 description = $8",[req.body.first_name,req.body.last_name,req.body.location,req.body.phone,req.body.other_phone,req.body.age,req.body.gender,req.body.description],(err,res) => {
         if (err){
             console.log(err)
-            
+            resp.send({status:"fail",message:"Update fail "})
+        }
+        if(res != undefined && res.rowCount ==1){
+            resp.send({status:"success",message:"Update success"})
         }
     })
 

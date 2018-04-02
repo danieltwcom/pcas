@@ -1418,6 +1418,49 @@ app.post('/data',function(req,res){
             }
         })
     }
+
+    if(req.body.type=="post-progress"){
+        pool.query("select count(*),progress from coord_postings group by progress order by case when progress='Open' then 1 When progress='Fulfilled' then 2 when progress='In Progress' then 3 when progress='Complete' then 4 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="user-type"){
+        pool.query("select count(*),role from users group by role order by case when role='coordinator' then 1 when role='ti' then 2 when role='admin' then 3 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-demand"){
+        pool.query("select sum(num_of_transcriber) as d_trans, sum(num_of_interpreter) as d_inter,to_char(date_created,'YYYY-MM') as month from coord_postings group by month",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+    
 })
 
 

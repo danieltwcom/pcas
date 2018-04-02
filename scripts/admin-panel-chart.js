@@ -6,39 +6,53 @@ $(document).ready(function(){
     },function(e){
         $(e.currentTarget).find(".custom-card-text").css("display","none")
     })
+
     $(".card").click(function(e){
-        console.log(e.target.id,$("#close_card"));
         // if clicked x close_card button
         if(e.target.id == "close_card"){
-            $(".close_card").css("display","none");
-            $(e.currentTarget).css("position","relative")
-            $(e.currentTarget).css("max-width","18rem")
-            $(e.currentTarget).css("z-index","1")
-            $(e.currentTarget).find(".card-detail").css("display","none")
-            $(e.currentTarget).find(".card-detail").css("width","0px")
-            $(e.currentTarget).find(".card-detail").css("height","0px")
-            $(e.currentTarget).find("#card-info").css("display","block")
-            $(e.currentTarget).css("color","")
-            $(e.currentTarget).css("background-color","")
+            close_card(e)
         }else{
-            $(".close_card").css("display","block");
-            $(e.currentTarget).css("position","absolute")
-            $(e.currentTarget).css("max-width","100%")
-            $(e.currentTarget).css("z-index","2")
-            $(e.currentTarget).find(".card-detail").css("display","block")
-            $(e.currentTarget).find(".card-detail").css("width","100%")
-            $(e.currentTarget).find(".card-detail").css("height","100%")
-            $(e.currentTarget).find("#card-info").css("display","none")
-            $(e.currentTarget).css("background-color","white")
-            $(e.currentTarget).css("color","black")
+            open_card(e)
         }
         
     });
+    
+    // $(window).click((e)=>{
+    //     console.log(e.target.contains(document.getElementsByClassName('card')))
+    //     if(e.target){
+    //         close_card(e);
+    //     }
+    // })
 
+    function close_card(e){
+        $(".close_card").css("display","none");
+        $(e.currentTarget).css("position","relative")
+        $(e.currentTarget).css("max-width","18rem")
+        $(e.currentTarget).css("z-index","1")
+        $(e.currentTarget).find(".card-detail").css("display","none")
+        $(e.currentTarget).find(".card-detail").css("width","0px")
+        $(e.currentTarget).find(".card-detail").css("height","0px")
+        $(e.currentTarget).find("#card-info").css("display","block")
+        $(e.currentTarget).css("color","")
+        $(e.currentTarget).css("background-color","")
+    }
+
+    function open_card(e){
+        $(".close_card").css("display","block");
+        $(e.currentTarget).css("position","absolute")
+        $(e.currentTarget).css("max-width","100%")
+        $(e.currentTarget).css("z-index","2")
+        $(e.currentTarget).find(".card-detail").css("display","block")
+        $(e.currentTarget).find(".card-detail").css("width","100%")
+        $(e.currentTarget).find(".card-detail").css("height","100%")
+        $(e.currentTarget).find("#card-info").css("display","none")
+        $(e.currentTarget).css("background-color","white")
+        $(e.currentTarget).css("color","black")
+    }
     // --- Charts ---
     let title_size = 20;
     let bg_color_array = [
-        'rgb(66, 95, 244)','rgb(255, 99, 132)',"#94ff77",'#5ac243','#fb3725','#ecfbb1','#cd06bb','#25d961',"#5086b9","#288f0c","#f6b33a",'#f3f502','#8fe7ee',
+        "rgb(179, 244, 66)","rgb(239, 220, 95)","rgb(255, 124, 106)","rgb(107, 193, 255)",'#fb3725','#ecfbb1','#cd06bb','#25d961',"#5086b9","#288f0c","#f6b33a",'#f3f502','#8fe7ee',
         '#1fb574' ,'#3231e6' ,'#b8945e','#bdacb0'
     ]
     // - [co and ti post chart]
@@ -68,8 +82,7 @@ $(document).ready(function(){
                         label: "Coordinator and interpreter Posts",
                         backgroundColor: [
                             'rgb(155, 155, 155)',
-                            'rgb(66, 95, 244)',
-                            'rgb(255, 99, 132)',
+                            "rgb(255, 124, 106)","rgb(107, 193, 255)"
                         ],
                         data: co_ti_post_data,
                     }]
@@ -95,10 +108,7 @@ $(document).ready(function(){
                     labels: ["Coordinator Posts", "Interpreter Posts"],
                     datasets: [{
                         label: "Coordinator and interpreter Posts",
-                        backgroundColor: [
-                            'rgb(66, 95, 244)',
-                            'rgb(255, 99, 132)',
-                        ],
+                        backgroundColor: ["rgb(255, 124, 106)","rgb(107, 193, 255)"],
                         data: co_ti_post_data.slice(1),
                     }]
                 },
@@ -280,19 +290,20 @@ $(document).ready(function(){
                             datasets: [{
                                 label: "Total Posts",
                                 fill:false,
-                                borderColor:"rgb(155, 155, 155)",
+                                borderColor:'rgb(155, 155, 155)',
                                 lineTension:0.1,
                                 data:total_number_array
                             },{
                                 label: "Coordinator Posts",
                                 fill:false,
-                                borderColor: "rgb(66, 125, 244)",
+                                borderColor:"rgb(255, 124, 106)",
                                 lineTension:0.1,
                                 data:co_number_array
                             },{
                                 label: "Interpreter Posts",
                                 fill:false,
-                                borderColor: "rgb(247, 76, 110)",
+                                borderColor: "rgb(107, 193, 255)",
+                        
                                 lineTension:0.1,
                                 data:ti_number_array
                             }
@@ -335,4 +346,240 @@ $(document).ready(function(){
         }
     });
 
+    // - [post quality]
+    $.ajax({
+        url:"/data",
+        type:"post",
+        data:{
+            type:"post-progress"
+        },
+        success:function(res){
+            console.log(res.data)
+            let status_label = [];
+            let status_count = []
+            $("#post_open_info").html(res.data[0].progress+": "+res.data[0].count);
+            $("#post_fulfill_info").html(res.data[1].progress+": "+res.data[1].count);
+            $("#post_inprogress_info").html(res.data[2].progress+": "+res.data[2].count)
+            $("#post_complete_info").html(res.data[3].progress+": "+res.data[3].count);
+            
+            res.data.forEach((e)=>{
+                status_label.push(e.progress)
+                status_count.push(e.count)
+            })
+            let post_status_chart_obj = new Chart(post_status_chart, {
+                type: 'pie',
+                data: {
+                    labels: status_label,
+                    datasets: [{
+                        label: "Posts Status",
+                        backgroundColor: [
+                            "rgb(179, 244, 66)",
+                            "rgb(239, 220, 95)",
+                            "rgb(255, 124, 106)",
+                            "rgb(107, 193, 255)"
+                        ],
+                        data: status_count,
+                    }]
+                },
+                options:{
+                    title:{
+                        display:true,
+                        fontSize:title_size,
+                        text:"Post Status"
+                    },
+                    legend:{
+                        position:"left"
+                    },
+                    rotation: Math.PI,
+                }
+            });
+            let post_status_chart_obj_2 = new Chart(post_status_chart_2, {
+                type: 'bar',
+                data: {
+                    labels: status_label,
+                    datasets: [{
+                        label: "Post Status",
+                        backgroundColor: [
+                            "rgb(179, 244, 66)",
+                            "rgb(239, 220, 95)",
+                            "rgb(255, 124, 106)",
+                            "rgb(107, 193, 255)"
+                        ],
+                        data: status_count,
+                    }]
+                },
+                options:{
+                    title:{
+                        display:true,
+                    },
+                    legend:{
+                        display:false
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true,
+                                stepSize:1
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+    })
+
+    // - [user pie chart]
+    let user_type = ["Coordinator","Interpreter","Admin"];
+    let user_type_count = [];
+    $.ajax({
+        url:"/data",
+        type:"post",
+        data:{
+            type:"user-type"
+        },
+        success:function(res){
+            console.log(res);
+            let total_users = parseInt(res.data[2].count)+parseInt(res.data[1].count)+parseInt(res.data[0].count);
+            $("#coord_number_info").html("Coordinators: "+res.data[0].count);
+            $("#interpreter_number_info").html("Interpreters: "+res.data[1].count);
+            $("#admin_number_info").html("Admins: "+res.data[2].count);
+            $("#total_user_number_info").html("Total: "+total_users);
+            
+            for(i=0;i<3;i++){
+                user_type_count.push(res.data[i].count)
+            }
+
+            let user_chart_obj = new Chart(user_type_chart, {
+                type: 'pie',
+                data: {
+                    labels: user_type,
+                    datasets: [{
+                        label: "User Number",
+                        backgroundColor: [
+                            "rgb(179, 244, 66)",
+                            "rgb(239, 220, 95)",
+                            "rgb(255, 124, 106)",
+                            "rgb(107, 193, 255)"
+                        ],
+                        data: user_type_count,
+                    }]
+                },
+                options:{
+                    title:{
+                        display:true,
+                        fontSize:title_size,
+                        text:"Users Number"
+                    },
+                    legend:{
+                        position:"left"
+                    },
+                    rotation: Math.PI,
+                }
+            });
+            let user_chart_obj_2 = new Chart(user_type_chart_2, {
+                type: 'bar',
+                data: {
+                    labels: user_type,
+                    datasets: [{
+                        label: "User Number",
+                        backgroundColor: [
+                            "rgb(179, 244, 66)",
+                            "rgb(239, 220, 95)",
+                            "rgb(255, 124, 106)",
+                            "rgb(107, 193, 255)"
+                        ],
+                        data: user_type_count,
+                    }]
+                },
+                options:{
+                    title:{
+                        display:true,
+                    },
+                    legend:{
+                        display:false
+                    },
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true,
+                                stepSize:1
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+    })
+
+    //- [user co and ti's supply and demand]
+    let interpreter_demand_array = []
+    let transcriber_demand_array = []
+    let total_demand_array = []
+    let month_demand_map={}
+    $.ajax({
+        url:'/data',
+        type:'post',
+        data:{
+            type:'ti-demand'
+        },
+        success:function(res){
+            console.log("hey",res)
+            // construct month map 
+            for(i=0;i<months.length;i++){
+                month_demand_map[months[i]] = {trans_demand:0,inter_demand:0};
+            }
+            // assign co post value to map
+            res.data.forEach((e)=>{
+                if(e.month in month_demand_map){
+                    month_demand_map[e.month].trans_demand = e.d_trans
+                    month_demand_map[e.month].inter_demand = e.d_inter
+                }
+            })
+            // contrsuct transcriber and interpreter demand arr
+            for (let key in month_demand_map){
+                interpreter_demand_array.push(parseInt(month_demand_map[key].inter_demand))
+                transcriber_demand_array.push(parseInt(month_demand_map[key].trans_demand))
+                total_demand_array.push(parseInt(month_demand_map[key].inter_demand)+parseInt(month_demand_map[key].trans_demand))
+            }
+            let ti_demand_chart = document.getElementById('ti_demand_chart').getContext('2d');
+            let chart = new Chart(ti_demand_chart, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: "Total Demand",
+                        fill:false,
+                        borderColor:'rgb(155, 155, 155)',
+                        lineTension:0.1,
+                        data:total_demand_array
+                    },{
+                        label: "Interpreter Demand",
+                        fill:false,
+                        borderColor:"rgb(255, 124, 106)",
+                        lineTension:0.1,
+                        data:interpreter_demand_array
+                    },{
+                        label: "Transcriber Demand",
+                        fill:false,
+                        borderColor: "rgb(107, 193, 255)",
+                        lineTension:0.1,
+                        data:transcriber_demand_array
+                    }
+                ],
+
+                },
+                options:{
+                    title:{
+                        display:true,
+                        fontSize:title_size,
+                        text:"Monthly Service Demand"
+                    },
+                    legend:{
+                        position:"left"
+                    },
+
+                }
+            });
+        }
+    })
 })

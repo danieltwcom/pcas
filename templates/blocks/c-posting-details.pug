@@ -55,7 +55,7 @@ block content
                             if applicant[i].accepted === true
                                 - acceptedNum++
                         h3 [##{post.post_id}] #{post.title}
-                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber)) || post.progress === 'Fulfilled'
+                            if post.progress === 'Fulfilled'
                                 span.badge.badge-info.ml-1 Fulfilled
                             else if post.progress === 'Open'
                                 span.badge.badge-primary.ml-1 Open

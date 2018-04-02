@@ -12,7 +12,7 @@ const randomstring = require('randomstring');
 const mailer = require('./js/mailer')
 
 // ------------Server variables setup
-const port = process.env.SERVER_PORT || 56789;
+const port = process.env.PORT;
 var app = express();
 const server = require("http").createServer(app);
 var pF = path.resolve(__dirname, "html");
@@ -20,14 +20,20 @@ const saltRounds = 10;
 var hashPass;
 
 //----------------PostgrSQL connection---------------
-var pool = new pg.Pool({
-    user: process.env.PGSQL_USER,
-    host: process.env.PGSQL_HOST,
-    password:process.env.PGSQL_PASSWORD,
-    database: process.env.PGSQL_DATABASE,
-	max:process.env.PGSQL_MAX,
-    port: process.env.DB_PORT
-});
+if (process.env.NODE_ENV === 'production') {
+    pg.defaults.size = 20;
+    var pool = new pg.Client(process.env.DATABASE_URL);
+    pool.connect();
+} else {
+    var pool = new pg.Pool({
+        user: process.env.PG_USER,
+        host: process.env.DATABASE_URL,
+        password:process.env.PG_PASSWORD,
+        database: process.env.DATABASE,
+        max:process.env.PGSQL_MAX,
+        port: process.env.DB_PORT
+    });
+}
 
 // ---- Node Mailer setup ---- //
 let transporter = nodemailer.createTransport({
@@ -56,7 +62,7 @@ var upload = multer({ storage: storage });
 //-------------Sessions setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 600000 // 10 minutes
 }));
 
 // Initializing PUG template

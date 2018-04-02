@@ -299,13 +299,16 @@ app.post("/resetPass",function(req,resp){
 app.post("/edit-profile",function(req,resp){
     console.log(req.body)
     if((stringRegex.test(req.body.first_name) && stringRegex.test(req.body.last_name) && stringRegex.test(req.body.location) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.other_phone) && numberRegex.test(req.body.age) && stringRegex.test(req.body.gender) )== false ){
-        resp.render('blocks/edit-profile')
+        resp.send({status:"fail",message:"Input invalid"})
         return
     }
     pool.query("UPDATE users SET first_name=$1 last_name=$2 location=$3 phone_number = $4 other_phone = $5 age = $6 gender = $7 description = $8",[req.body.first_name,req.body.last_name,req.body.location,req.body.phone,req.body.other_phone,req.body.age,req.body.gender,req.body.description],(err,res) => {
         if (err){
             console.log(err)
-            
+            resp.send({status:"fail",message:"Update fail "})
+        }
+        if(res != undefined && res.rowCount ==1){
+            resp.send({status:"success",message:"Update success"})
         }
     })
 
@@ -633,7 +636,7 @@ app.post('/apply-options', function(req, resp) {
 
 app.post('/submit-edit-post', function(req, resp) {
     if (req.session.username) {
-        if (req.session.role === 'coordinator') {
+        if (req.session.role === 'coordinator' || (req.session.role === 'admin' && req.body.post_type=="coord")) {
             if (req.body.screened) {
                 var screened = true;
             } else {
@@ -652,10 +655,10 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
-        } else if (req.session.role === 'ti') {
+        } else if (req.session.role === 'ti' || (req.session.role === 'admin' && req.body.post_type=="ti")) {
             var daysAvailable = req.body.days.join(', ');
             var queryString = 'UPDATE ti_postings SET title = $1, time_available = $2, starting = $3, recurring = $4, days_available = $5, details = $6 WHERE post_id = $7';
             pool.query(queryString, [req.body.title, req.body.time, req.body.starting, req.body.recurring, daysAvailable, req.body.details, req.body.post_id], function(err, result) {
@@ -663,7 +666,7 @@ app.post('/submit-edit-post', function(req, resp) {
                     console.log(err);
                     resp.send({status: 'fail'});
                 } else if (result !== undefined && result.rowCount > 0) {
-                    resp.send({status: 'success'});
+                    resp.send({status: 'success',role:req.session.role});
                 }
             });
         }
@@ -1059,11 +1062,16 @@ app.get('/post-created', function(req, resp) {
 
 // ------------- Admin Panel --------------
 app.get("/admin-panel",function(req,res){
-    res.render("blocks/admin-panel", {user: req.session});
+    if(req.session.role === 'admin'){
+        res.render("blocks/admin-panel");
+    }else{
+        res.render("blocks/login", {message:"Please login as admin"});
+    }
 })
 
-// --- manage user ---
+// ------ manage user ------
 app.post("/manage-user",function(req,res){
+    // search user
     if(req.body.type == "get"){
         let match_input = "%"+req.body.input_value+"%";
         pool.query("SELECT * FROM users WHERE username LIKE $1 OR email LIKE $1 OR CAST(user_id as varchar) =$2 ORDER BY user_id"
@@ -1079,6 +1087,7 @@ app.post("/manage-user",function(req,res){
             }
         })
     }
+    // verify user
     if(req.body.type == "verify"){
         let user_array = req.body.user_array;
         let user_arr_sql = "(";
@@ -1104,6 +1113,33 @@ app.post("/manage-user",function(req,res){
         })
         
     }
+    // screen user
+    if(req.body.type == "screen"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET is_screened = true WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+    // delete user
     if(req.body.type == "delete"){
         let user_array = req.body.user_array;
         let user_arr_sql = "(";
@@ -1138,10 +1174,61 @@ app.post("/manage-user",function(req,res){
         })
         
     }
+    // promote user
+    if(req.body.type == "promote"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET role='admin' WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+                res.send({
+                    status:"fail"
+                })
+            }else {
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount
+                })
+            }
+        })
+    }
 })
 
-// --- manage post ---
+// ------ manage post -------
+app.get('/manage-post-edit',function(req,resp){
+    if (req.session.username && req.session.role=="admin") {
+        if(req.query.post_type=="coord"){
+            console.log("coord")
+            var queryString = 'SELECT * FROM coord_postings WHERE post_id = $1';
+        }else if(req.query.post_type=="ti"){
+            console.log("ti")
+            var queryString = 'SELECT * FROM ti_postings WHERE post_id = $1';
+        }
+        console.log(queryString);
+
+        pool.query(queryString, [req.query.post_id], function(err, result) {
+            if (err) { console.log(err); }
+
+            if (result !== undefined) {
+                console.log(result.rows.length)
+                resp.render('blocks/edit-post', {user: req.session,post_type:req.query.post_type, post: result.rows[0]});
+            }
+        })
+    }else{
+        resp.render('block/login')
+    }
+})
 app.post("/manage-post",function(req,res){
+    // search post from coordinator postings
     if(req.body.type=="get-co"){
         let match_input = "%"+req.body.input_value+"%";
         pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE title LIKE $1 OR CAST(post_id as varchar) = $2 ORDER BY post_id"
@@ -1156,7 +1243,9 @@ app.post("/manage-post",function(req,res){
                 res.send({status:"no post found"});
             }
         })
-    }else if(req.body.type=="get-ti"){
+    }
+    // search post from interpreter postings
+    if(req.body.type=="get-ti"){
         let match_input = "%"+req.body.input_value+"%";
         pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (title LIKE $1 OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
         ,[match_input,req.body.input_value]
@@ -1170,9 +1259,9 @@ app.post("/manage-post",function(req,res){
                 res.send({status:"no post found"});
             }
         })
-    }else if(req.body.type=="modify"){
-
-    }else if(req.body.type=="delete"){
+    }
+    // delete post
+    if(req.body.type=="delete"){
         let co_post_array = [];
         let ti_post_array = [];
         let co_post_arr_sql = "(0)";
@@ -1228,6 +1317,157 @@ app.post("/manage-post",function(req,res){
      
     }
 })
+
+app.post("/set-post-progress",function(req,res){
+    set_post_progress(req,res);
+})
+
+function set_post_progress(req,res){
+    let co_post_array = [];
+    let co_post_arr_sql = "(0)";
+
+    if(req.body.co_post_array){
+        co_post_array = req.body.co_post_array
+        co_post_arr_sql = "("
+    }
+
+    for(i=0; i<co_post_array.length;i++){
+        if(i==co_post_array.length-1){
+            co_post_arr_sql+=co_post_array[i]+")"
+        }else{
+            co_post_arr_sql+=co_post_array[i]+","
+        }
+    }
+
+    let query = "UPDATE coord_postings SET progress=$1 WHERE post_id IN "+co_post_arr_sql;
+
+    pool.query(query,[req.body.status],function(err,result){
+        if(err){
+            console.log(err);
+            res.send({status:"fail"});
+        }else{
+            res.send({
+                status:"success",
+                row_updated:co_post_array.length,
+            })
+        }
+    })
+}
+
+// ----- get data -------
+app.post('/data',function(req,res){
+    if(req.body.type=="school"){
+        pool.query('select count(post_id),school from coord_postings group by school order by count desc',[],function(err,result){
+            if(err){res.send('err')}
+            else if(result){
+                res.send({
+                    status:"success",
+                    schools:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post"){
+        pool.query('select (select count(*) from ti_postings) as ti_post_count,(select count(*) from coord_postings) as co_post_count from coord_postings limit 1',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="co-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from coord_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-monthly-post"){
+        pool.query("select count(*),to_char(date_created,'YYYY-MM') as month from ti_postings group by month order by month asc",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post_status"){
+        pool.query('select count(*),progress from coord_postings group by progress',[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="post-progress"){
+        pool.query("select count(*),progress from coord_postings group by progress order by case when progress='Open' then 1 When progress='Fulfilled' then 2 when progress='In Progress' then 3 when progress='Complete' then 4 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="user-type"){
+        pool.query("select count(*),role from users group by role order by case when role='coordinator' then 1 when role='ti' then 2 when role='admin' then 3 END",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+
+    if(req.body.type=="ti-demand"){
+        pool.query("select sum(num_of_transcriber) as d_trans, sum(num_of_interpreter) as d_inter,to_char(date_created,'YYYY-MM') as month from coord_postings group by month",[]
+        ,function(err,result){
+            if(err){
+                console.log(err)
+            }else if(result){
+                res.send({
+                    status:"success",
+                    data:result.rows
+                })
+            }
+        })
+    }
+    
+})
+
 
 // --------------Server listening --------------
 server.listen(port, function (err) {

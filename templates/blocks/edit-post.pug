@@ -5,11 +5,12 @@ append scripts
 
 block content
     h3 Edit Post
-    if user.role === 'coordinator'
+    if user.role === 'coordinator' || (user.role === 'admin' && post_type=='coord')
         .card
             .card-body
                 form.edit-post(method='POST', action='/submit-edit-post')
                     input(type='hidden', name='post_id', value=post.post_id)
+                    input(type='hidden', name='post_type', value=post_type)
                 
                     .form-group.d-flex.justify-content-between
                         .w-49
@@ -66,11 +67,12 @@ block content
                     .text-right
                         input.btn.btn-primary.mr-1(type='submit', value='Submit')
                         button.btn.btn-secondary(type='button', onclick='window.history.go(-1)') Cancel
-    if user.role === 'ti'
+    if user.role === 'ti' || (user.role === 'admin' && post_type=='ti')
         .card
             .card-body
                 form(method='POST', action='/submit-edit-post')
                     input(type='hidden', name='post_id', value=post.post_id)
+                    input(type='hidden', name='post_type', value=post_type)
                     .d-flex.justify-content-between
                         .form-group.w-49
                             label(for='title') Title:

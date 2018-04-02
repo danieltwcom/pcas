@@ -2,12 +2,14 @@ extends ../layout
 
 append scripts
     script(src='/scripts/admin-panel.js')
+    script(src='/scripts/admin-panel-chart.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js')
     link(rel='stylesheet', href='/style/admin-panel.css')
 
 block content
     .row.d-flex.justify-content-center
         #alert_box.alert-box.alert.alert-warning.alert-dismissible.fade.show(role='alert')
-            button.close(type='button', data-dismiss='alert', aria-label='Close')
+            button#alert_close_btn.close(type='button', aria-label='Close')
                 span(aria-hidden='true') ×
             span#alert_text
 
@@ -40,10 +42,12 @@ block content
                         span.caret
                     ul.dropdown-menu
                         a#verify_btn.dropdown-item(href="#") Verify
+                        a#screen_btn.dropdown-item(href="#") Screen
+                        a#promote_btn.dropdown-item(href="#") Promote Admin
                         a#delete_btn.dropdown-item(href="#") Delete
             
             //- found user table
-            table.table.table-light.mt-2
+            table#user_table.table.table-light.table-hover.mt-2
                 thead.thead-dark
                     tr
                         th(scope='col') #
@@ -53,8 +57,9 @@ block content
                         th(scope='col') Last Name
                         th(scope='col') Role
                         th(scope='col') Verified
-                        th(scope='col') 
-                tbody#table_body
+                        th(scope='col') Screened
+                        th(scope='col') Select
+                tbody#table_body.table-body
         
         //- ------ Manage Posts ------
         #manage-post.content.container
@@ -67,85 +72,125 @@ block content
                     .input-group-append
                         button#search_post_btn.btn.btn-primary search
 
-                //- action button
+                //- action buttons
                 .dropdown
                     button.btn.btn-warning.dropdown-toggle(type='button', data-toggle='dropdown')
                         | Action
                         span.caret
                     ul.dropdown-menu
+                        label.ml-3 Set Post
+                        a#open_post_btn.dropdown-item(href="#") Open
+                        a#fulfill_post_btn.dropdown-item(href="#") Fulfill
+                        a#inprogress_post_btn.dropdown-item(href="#") In progress
+                        a#complete_post_btn.dropdown-item(href="#") Complete
+                        label.ml-3 Manage Post
                         a#modify_post_btn.dropdown-item(href="#") Modify
                         a#delete_post_btn.dropdown-item(href="#") Delete
             
-            //- found user table
-            table.table.table-light.mt-2
-                thead.thead-dark
-                    tr
-                        th(scope='col') #
-                        th(scope='col') Title
-                        th(scope='col') School
-                        th(scope='col') Progress
-                        th(scope='col') Date
-                        th(scope='col') Course #
-                        th(scope='col') Verified
-                        th(scope='col') 
-                tbody#co_post_table_body
-
-                thead.thead-dark
-                    tr
-                        th(scope='col') #
-                        th(scope='col') Title
-                        th(scope='col') First Name
-                        th(scope='col') Last Name
-                        th(scope='col') Email
-                        th(scope='col') Created Date
-                        th(scope='col') Avaliable From
-                        
-                        th(scope='col') 
-                tbody#ti_post_table_body
+            //- table tabs
+            ul#myTab.nav.nav-tabs.mt-2(role='tablist')
+                li.nav-item
+                    a#coord-post-tab.nav-link.active(data-toggle='tab', href='#co_post_table_div', role='tab', aria-controls='home', aria-selected='true') Coordinator Posts
+                li.nav-item
+                    a#ti-post-tab.nav-link(data-toggle='tab', href='#ti_post_table_div', role='tab', aria-controls='profile', aria-selected='false') Interpreter Posts
+                
+            .tab-content
+                #co_post_table_div.tab-pane.active(role='tabpanel', aria-labelledby='home-tab')
+                    table#co_post_table.table.table-light.table-hover
+                        thead.thead-dark
+                            tr
+                                th(scope='col') #
+                                th(scope='col') Title
+                                th(scope='col') School
+                                th(scope='col') Progress
+                                th(scope='col') Date
+                                th(scope='col') Course #
+                                th(scope='col') Select
+                        tbody#co_post_table_body.table-body
+                
+                #ti_post_table_div.tab-pane(role='tabpanel', aria-labelledby='profile-tab')
+                    table#ti_post_table.table.table-light.table-hover
+                        thead.thead-dark
+                            tr
+                                th(scope='col') #
+                                th(scope='col') Title
+                                th(scope='col') Username
+                                th(scope='col') First Name
+                                th(scope='col') Last Name
+                                th(scope='col') Date
+                                th(scope='col') Select
+                        tbody#ti_post_table_body.table-body
 
         #manage-statistic.content.container
             .card-deck
-                .card.border-primary.mb-3(style='max-width: 18rem;')
-                    .card-header.text-center.bg-primary
+                .card.border-info.mb-3(style='max-width: 18rem;')
+                    .card-header.text-center.bg-info
                         h5 Posts
-                        label#close_card &times;
+                        label#close_card.close_card &times;
                     a#card-info.card-body.text-center(href="#")
-                        //- h5.card-title.text-center  Requests
-                        p.card-text
-                            | Coordinator Posts: 100
-                        p.card-text
-                            | Interpreter Posts: 123
+                        p#card_co_post.card-text
+                        p#card_ti_post.card-text
+                        p#card_total_post.card-text
+                        p.card-text.custom-card-text 
+                            | More details &gt;&gt;
                     .card-detail
-                        .detail-box
-                            image.card-detail(src="https://www.cesarsway.com/sites/newcesarsway/files/styles/large_article_preview/public/Dog-bite-prevention.jpg?itok=3N2KTNkP")
+                        .graph-detail-wrap
+                            .graph-detail-row
+                                .graph-detail-box
+                                    canvas#co_ti_post_chart
+                                .graph-detail-box 
+                                    canvas#co_ti_post_chart2
+                            .graph-detail-row
+                                .graph-detail-box
+                                    canvas#school_post_chart
+                                .graph-detail-box
+                                    canvas#school_post_chart2
+                            .graph-detail-row
+                                .graph-detail-box-md
+                                    canvas#line_post_chart
             
-                .card.border-warning.mb-3(style='max-width: 18rem;')
-                    .card-header.text-center.bg-warning
-                        h5 Post Quality
-                        label#close_card &times;
+                .card.border-info.mb-3(style='max-width: 18rem;')
+                    .card-header.text-center.bg-info
+                        h5 Post Status
+                        label#close_card.close_card &times;
                     a#card-info.card-body.text-center(href="#")
                         //- h5.card-title.text-center  Requests
-                        p.card-text
-                            | Complete: 22
-                        p.card-text
-                            | In progess: 10
+                        p#post_open_info.card-text
+                        p#post_fulfill_info.card-text
+                        p#post_inprogress_info.card-text
+                        p#post_complete_info.card-text
+                        p.card-text.custom-card-text 
+                            | More detail &gt;&gt;
                     .card-detail
-                        .detail-box
-                            image.card-detail(src="https://www.cesarsway.com/sites/newcesarsway/files/styles/large_article_preview/public/Dog-bite-prevention.jpg?itok=3N2KTNkP")
+                        .graph-detail-wrap
+                            .graph-detail-row
+                                .graph-detail-box
+                                    canvas#post_status_chart
+                                .graph-detail-box
+                                    canvas#post_status_chart_2
 
-                .card.border-danger.mb-3(style='max-width: 18rem;')
-                    .card-header.text-center.bg-danger
-                        h5 User Pool
-                        label#close_card &times;
+                .card.border-info.mb-3(style='max-width: 18rem;')
+                    .card-header.text-center.bg-info
+                        h5 Users
+                        label#close_card.close_card &times;
                     a#card-info.card-body.text-center(href="#")
                         //- h5.card-title.text-center  Requests
-                        p.card-text
-                            | Coordinators: 27
-                        p.card-text
-                            | Interpreters: 80
+                        p#coord_number_info.card-text
+                        p#interpreter_number_info.card-text
+                        p#admin_number_info.card-text
+                        p#total_user_number_info.card-text
+                        p.card-text.custom-card-text 
+                            | More detail &gt;&gt;
                     .card-detail
-                        .detail-box
-                            image.card-detail(src="https://www.cesarsway.com/sites/newcesarsway/files/styles/large_article_preview/public/Dog-bite-prevention.jpg?itok=3N2KTNkP")
+                        .graph-detail-wrap 
+                            .graph-detail-row
+                                .graph-detail-box
+                                    canvas#user_type_chart
+                                .graph-detail-box
+                                    canvas#user_type_chart_2
+                            .graph-detail-row
+                                .graph-detail-box-md
+                                    canvas#ti_demand_chart
                 
                 
                 

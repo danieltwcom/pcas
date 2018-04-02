@@ -12,7 +12,7 @@ const randomstring = require('randomstring');
 const mailer = require('./js/mailer')
 
 // ------------Server variables setup
-const port = process.env.SERVER_PORT || 56789;
+const port = process.env.PORT;
 var app = express();
 const server = require("http").createServer(app);
 var pF = path.resolve(__dirname, "html");
@@ -20,14 +20,20 @@ const saltRounds = 10;
 var hashPass;
 
 //----------------PostgrSQL connection---------------
-var pool = new pg.Pool({
-    user: process.env.PGSQL_USER,
-    host: process.env.PGSQL_HOST,
-    password:process.env.PGSQL_PASSWORD,
-    database: process.env.PGSQL_DATABASE,
-	max:process.env.PGSQL_MAX,
-    port: process.env.DB_PORT
-});
+if (process.env.NODE_ENV === 'production') {
+    pg.defaults.size = 20;
+    var pool = new pg.Client(process.env.DATABASE_URL);
+    pool.connect();
+} else {
+    var pool = new pg.Pool({
+        user: process.env.PG_USER,
+        host: process.env.DATABASE_URL,
+        password:process.env.PG_PASSWORD,
+        database: process.env.DATABASE,
+        max:process.env.PGSQL_MAX,
+        port: process.env.DB_PORT
+    });
+}
 
 // ---- Node Mailer setup ---- //
 let transporter = nodemailer.createTransport({
@@ -56,7 +62,7 @@ var upload = multer({ storage: storage });
 //-------------Sessions setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 600000 // 10 minutes
 }));
 
 // Initializing PUG template
@@ -299,13 +305,16 @@ app.post("/resetPass",function(req,resp){
 app.post("/edit-profile",function(req,resp){
     console.log(req.body)
     if((stringRegex.test(req.body.first_name) && stringRegex.test(req.body.last_name) && stringRegex.test(req.body.location) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.other_phone) && numberRegex.test(req.body.age) && stringRegex.test(req.body.gender) )== false ){
-        resp.render('blocks/edit-profile')
+        resp.send({status:"fail",message:"Input invalid"})
         return
     }
     pool.query("UPDATE users SET first_name=$1 last_name=$2 location=$3 phone_number = $4 other_phone = $5 age = $6 gender = $7 description = $8",[req.body.first_name,req.body.last_name,req.body.location,req.body.phone,req.body.other_phone,req.body.age,req.body.gender,req.body.description],(err,res) => {
         if (err){
             console.log(err)
-            
+            resp.send({status:"fail",message:"Update fail "})
+        }
+        if(res != undefined && res.rowCount ==1){
+            resp.send({status:"success",message:"Update success"})
         }
     })
 
@@ -353,14 +362,19 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') ORDER BY coord_postings.date_created ASC", function(err, c_result) {
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') AND is_archived = false ORDER BY coord_postings.date_created ASC", function(err, result) {
             if (err) { console.log(err); }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false ORDER BY ti_postings.date_created ASC', function(err, ti_result) {
+            if (result !== undefined) {
+                var coord_postings = result.rows;
+            }
+
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false AND is_archived = false ORDER BY ti_postings.date_created ASC', function(err, result) {
                 if (err) { console.log(err); }
 
-                let coord_postings = c_result.rows;
-                let ti_postings = ti_result.rows;
+                if (result !== undefined) {
+                    var ti_postings = result.rows;
+                }
 
                 resp.render('postings', {user: req.session, coord_postings: coord_postings, ti_postings: ti_postings});
             });
@@ -376,7 +390,7 @@ app.get('/my-applications', function(req, resp) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});
-            } else if (result !== undefined && result.rows.length > 0) {
+            } else if (result !== undefined) {
                 resp.render('blocks/my-applications', {user: req.session, applications: result.rows});
             }
         });
@@ -759,13 +773,13 @@ app.post('/deactivate-post', function(req, resp) {
     }
 });
 
-app.post('/delete-post', function(req, resp) {
+app.post('/archive-post', function(req, resp) {
     console.log(req.body);
     if (req.session.username) {
         if (req.session.role === 'coordinator') {
-            var queryString = 'DELETE FROM coord_postings WHERE post_id = $1 RETURNING post_id';
+            var queryString = 'UPDATE coord_postings SET is_archived = true WHERE post_id = $1 RETURNING post_id';
         } else if (req.session.role === 'ti') {
-            var queryString = 'DELETE FROM ti_postings WHERE post_id = $1 RETURNING post_id';
+            var queryString = 'UPDATE ti_postings SET is_archived = true WHERE post_id = $1 RETURNING post_id';
         }
 
         pool.query(queryString, [req.body.post_id], function(err, result) {

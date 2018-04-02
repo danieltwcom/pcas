@@ -12,6 +12,10 @@ $(document).ready(function() {
                     $('<option>').attr('value', school.name).html(school.name)
                 );
             }
+
+            $('#schools').append(
+                $('<option>').attr('value', 'Other').html('Other')
+            )
         }
     });
 });

@@ -38,13 +38,8 @@ block content
                     input.form-control(type='password', name='confirm_password',required)
                 .form-group.w-33
                     label(for='School') School:
-                    select.form-control(name='school',required)
+                    select#schools.form-control(name='school',required)
                         option
-                        option(value='uvic') University of Victoria
-                        option(value='sfu') Simon Fraser University
-                        option(value='ubc') University of British Columbia
-                        option(value='langara') Langara College
-                        option(value='bcit') BCIT
                 .form-group.w-33
                     label(for='phone') Primary Phone #:
                     input.form-control(type='text', name='phone')

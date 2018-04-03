@@ -48,13 +48,14 @@ block content
                             |  #{post.other_phone}
         .col-9
             .card.mb-2
-                .card-body
-                    .d-flex.justify-content-between.align-items-center
+                .card-header
+                    .d-flex.justify-content-between
                         - var acceptedNum = 0
                         each v, i in applicant
                             if applicant[i].accepted === true
                                 - acceptedNum++
                         h3 [##{post.post_id}] #{post.title}
+                        h3
                             if post.progress === 'Fulfilled'
                                 span.badge.badge-info.ml-1 Fulfilled
                             else if post.progress === 'Open'
@@ -63,15 +64,15 @@ block content
                                 span.badge.badge-warning.ml-1 In Progress
                             else if post.progress === 'Complete'
                                 span.badge.badge-success.ml-1 Complete
-                        strong
-                            | Posted on #{post.date_created.toDateString()} by 
-                            a(href='/profile?user_id=' + post.user_id) #{post.username}
-                            - var coordinatorUpvoteNum = 0
-                            each v, i in upvote
-                                if upvote[i].voted_user_id === post.user_id
-                                    - coordinatorUpvoteNum++
-                            span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
-                    hr
+                    strong
+                        | Posted on #{post.date_created.toDateString()} by 
+                        a(href='/profile?user_id=' + post.user_id) #{post.username}
+                        - var coordinatorUpvoteNum = 0
+                        each v, i in upvote
+                            if upvote[i].voted_user_id === post.user_id
+                                - coordinatorUpvoteNum++
+                        span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
+                .card-body
                     label.d-block(for='details') Details:
                     | #{post.detail}
             

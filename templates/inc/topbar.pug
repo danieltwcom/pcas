@@ -3,15 +3,6 @@ nav.navbar.navbar-light.bg-light.mb-3
         include dropdown
     .mx-auto.d-flex.align-items-center
         img.w-10(src='/image/bcit.svg')
-        h3 Post-Secondary Communications Access Services 
-            if user
-                | #{user.user_id}
-    //-- .d-flex.w-20.align-items-center.border.p-2.rounded
-        img.rounded-circle.w-25.h-25.mr-1(src='/files/' + user.avatar_url)
-        div
-            div
-                a(href='/profile') #{user.username}
-            div
-                button.btn.btn-info.btn-sm#notification(type='button')
-                    i.fa.fa-bell-o.mr-1(aria-hidden='true')
-                    .badge.badge-light 10
+        h3 Post-Secondary Communications Access Services
+    if user
+        .w-15.text-right Logged in as #{user.username}

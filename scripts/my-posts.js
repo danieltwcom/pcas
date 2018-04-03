@@ -61,8 +61,10 @@ $(document).ready(function() {
                 success: function(resp) {
                     console.log(resp);
                     if (resp.status === 'empty') {
+                        form.off('submit');
                         alertify.okBtn('Ok').alert('There are no applicants to change the progress.');
                     } else if (resp.status === 'fail') {
+                        form.off('submit');
                         alertify.okBtn('Ok').alert('An error occurred.');
                     } else if (resp.status === 'success') {
                         form.off('submit');

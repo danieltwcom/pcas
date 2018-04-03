@@ -31,94 +31,112 @@ block content
                     .mb-2
                         label.w-35(for='name') Name:
                         | #{viewing.first_name} #{viewing.last_name}
-                        if viewing.hide_email === false
+                    if viewing.hide_email === false
+                        .mb-2
+                            label.w-35(for='email') Email:
+                            a(href='mailto:' + viewing.email) #{viewing.email}
+                    if viewing.hide_phone === false
+                        .mb-2
+                            label.w-35(for='phone') Phone #:
+                            if viewing.phone_number === null
+                                | Not Specified
+                            else
+                                | #{viewing.phone_number}
+                        if viewing.other_phone
                             .mb-2
-                                label.w-35(for='email') Email:
-                                a(href='mailto:' + viewing.email) #{viewing.email}
-                        if viewing.hide_phone === false
-                            .mb-2
-                                label.w-35(for='phone') Phone #:
-                                if viewing.phone_number === null
-                                    | Not Specified
-                                else
-                                    | #{viewing.phone_number}
-                            if viewing.other_phone
-                                .mb-2
-                                    label.w-35(for='other_phone') Other Phone #:
-                                    |  #{viewing.other_phone}
+                                label.w-35(for='other_phone') Other Phone #:
+                                |  #{viewing.other_phone}
                     .mb-2
                         label.w-35(for='location') Location:
                         if viewing.location === null
                             | Not Specified
                         else
                             | #{viewing.location}
+                    .mb-2
+                        label.w-35(for='role') Role:
+                        if viewing.role === 'coordinator'
+                            | Coordinator
+                        else
+                            | Interpreter/Transcriber
                     if user.user_id === viewing.user_id
                         .d-flex.justify-content-end
                             button#edit-profile-button.btn.btn-primary.btn-sm(type='button') Edit Profile
-        .col-4
-            #credentials.card.mb-3
-                .card-body
-                    h3 Credentials
-                    small
-                        i Certificates, licenses, etc.
+        .col-9
+            .row
+                .col-6
+                    #credentials.card.mb-3
+                        .card-body
+                            h3 Credentials
+                            small
+                                i Certificates, licenses, etc.
+                            if user.user_id === viewing.user_id
+                                form.delete-credential(action='/delete-credential', method='post')
+                                    .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                                        a(href='#') Certified Interpreter of UVIC
+                                        button.btn.btn-sm.btn-danger(type='submit') Delete
+                                form.delete-credential(action='/delete-credential', method='post')
+                                    .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                                        a(href='#') Certified Interpreter of SFU
+                                        button.btn.btn-sm.btn-danger(type='submit') Delete
+                                .card.mt-2
+                                    .card-body
+                                        h5.mb-0 Upload a Credential
+                                        small
+                                            i .gif .jpg .png .pdf (< 2 MB)
+                                form.custom-file.mt-2(action='/upload-credential', method='post')
+                                    input.custom-file-input(type='file', name='credential')
+                                    label#upload-filename.custom-file-label(for='customFile') Choose file
+                                    .text-right.mt-2
+                                        input.btn.btn-sm.btn-primary(type='submit', value='Upload')
+                            else
+                                .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                                        a(href='#') Certified Interpreter of UVIC
+                                        button.btn.btn-sm.btn-danger(type='submit') Delete
+                                .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
+                                        a(href='#') Certified Interpreter of SFU
+                                        button.btn.btn-sm.btn-danger(type='submit') Delete
+                .col-6
                     if user.user_id === viewing.user_id
-                        form.delete-credential(action='/delete-credential', method='post')
-                            .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
-                                a(href='#') Certified Interpreter of UVIC
-                                button.btn.btn-sm.btn-danger(type='submit') Delete
-                        form.delete-credential(action='/delete-credential', method='post')
-                            .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
-                                a(href='#') Certified Interpreter of SFU
-                                button.btn.btn-sm.btn-danger(type='submit') Delete
-                        .card.mt-2
+                        .card.mb-3
                             .card-body
-                                h5.mb-0 Upload a Credential
-                                small
-                                    i .gif .jpg .png .pdf (< 2 MB)
-                        form.custom-file.mt-2(action='/upload-credential', method='post')
-                            input.custom-file-input(type='file', name='credential')
-                            label#upload-filename.custom-file-label(for='customFile') Choose file
-                            .text-right.mt-2
-                                input.btn.btn-sm.btn-primary(type='submit', value='Upload')
-                    else
-                        .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
-                                a(href='#') Certified Interpreter of UVIC
-                                button.btn.btn-sm.btn-danger(type='submit') Delete
-                        .d-flex.justify-content-between.align-items-center.border-bottom.pb-2.mb-2
-                                a(href='#') Certified Interpreter of SFU
-                                button.btn.btn-sm.btn-danger(type='submit') Delete
-        .col-5
-            if user.user_id === viewing.user_id
-                .card.mb-3
-                    .card-body
-                        h3 Options
-                        form#options(method='POST', action='/apply-options')
-                            input(type='hidden', name='user_id', value=user.user_id)
-                            .form-inline.justify-content-between
-                                .form-inline
-                                    if user.hide_email === true
-                                        input#hide-email.form-control.mr-1(type='checkbox', name='hide_email', checked)
-                                    else
-                                        input#hide-email.form-control.mr-1(type='checkbox', name='hide_email')
-                                    label(for='hide_email') Hide Email
-                                .form-inline
-                                    if user.hide_phone === true
-                                        input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone', checked)
-                                    else
-                                        input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone')
-                                    label(for='hide_phone') Hide Phone
-                                .form-inline
-                                    if user.email_notification
-                                        input#email-notification.form-control(type='checkbox', name='email_notification', checked)
-                                    else
-                                        input#email-notification.form-control(type='checkbox', name='email_notification')
-                                    label(for='email_notification') Email Notification
-                            .text-right
-                                input.btn.btn-primary.btn-sm(type='submit', value='Apply')
+                                h3 Options
+                                form#options(method='POST', action='/apply-options')
+                                    input(type='hidden', name='user_id', value=user.user_id)
+                                    .form-inline.justify-content-between
+                                        .form-inline
+                                            if user.hide_email === true
+                                                input#hide-email.form-control.mr-1(type='checkbox', name='hide_email', checked)
+                                            else
+                                                input#hide-email.form-control.mr-1(type='checkbox', name='hide_email')
+                                            label(for='hide_email') Hide Email
+                                        .form-inline
+                                            if user.hide_phone === true
+                                                input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone', checked)
+                                            else
+                                                input#hide-phone.form-control.mr-1(type='checkbox', name='hide_phone')
+                                            label(for='hide_phone') Hide Phone
+                                        .form-inline
+                                            if user.email_notification
+                                                input#email-notification.form-control(type='checkbox', name='email_notification', checked)
+                                            else
+                                                input#email-notification.form-control(type='checkbox', name='email_notification')
+                                            label(for='email_notification') Email Notification
+                                    .text-right
+                                        input.btn.btn-primary.btn-sm(type='submit', value='Apply')
+                    .card
+                        .card-body
+                            h3 Description
+                            small
+                                i Educations, work experiences, etc.
+                            .card
+                                .card-body #{viewing.description}
             .card
                 .card-body
-                    h3 Description
-                    small
-                        i Educations, work experiences, etc.
-                    .card
-                        .card-body #{viewing.description}
+                    h3 Activities
+                    .row
+                        .col-8
+                            strong Recent Activities
+                        .col-2
+                            strong Total Posts
+                        .col-2
+                            strong Total Applications

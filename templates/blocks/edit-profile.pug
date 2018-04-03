@@ -52,7 +52,7 @@ block content
     h3 Change Email
     .card.mb-3
         .card-body.bg-light
-            form(action='/change-email', method='post')
+            form#change-email(action='/change-email', method='post')
                 .d-flex.justify-content-between
                     .form-group.w-45
                         label(for='email') New Email:
@@ -65,7 +65,7 @@ block content
     h3 Change Password
     .card
         .card-body.bg-light
-            form(action='/change-password', method='post')
+            form#change-password(action='/change-password', method='post')
                 .d-flex.justify-content-between
                     .form-group.w-33
                         label(for='current-password') Current Password:

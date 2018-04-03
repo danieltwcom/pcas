@@ -501,7 +501,7 @@ app.get('/messages', function(req, resp) {
 });
 
 
-app.get('/compose', function(req, resp) {
+/* app.get('/compose', function(req, resp) {
     if (req.session.username) {
         resp.render('blocks/compose', {user: req.session});
     } else {
@@ -515,7 +515,28 @@ app.get('/message-details', function(req, resp) {
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
-});
+}); 
+
+app.get('/sent', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/message-sent', {message: 'Message has been sent'});
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+}); 
+
+app.post('/send-message', function(req, resp) {
+    if (req.session.username) {
+        pool.query('INSERT INTO messages (sender, subject, message, recipient) VALUES ($1, $2, $3, $4)', [req.body.sender, req.body.subject, req.body.message, req.body.recipient], function(err, result) {
+            if (err) {
+                console.log(err);
+                resp.send({status: 'fail'});
+            } if (result !== undefined && result.rowCount > 0) {
+                resp.send({status: 'success'});
+            }
+        });
+    }
+}); */
 
 app.get('/create-post', function(req, resp) {
     console.log(req.session);
@@ -541,14 +562,6 @@ app.get('/edit-post', function(req, resp) {
                 resp.render('blocks/edit-post', {user: req.session, post: result.rows[0]});
             }
         })
-    } else {
-        resp.render('blocks/login', {message: "You're not logged in"});
-    }
-});
-
-app.get('/sent', function(req, resp) {
-    if (req.session.username) {
-        resp.render('blocks/message-sent', {message: 'Message has been sent'});
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -908,20 +921,7 @@ app.post('/application/:status', function(req, resp) {
     }
 });
 
-app.post('/send-message', function(req, resp) {
-    if (req.session.username) {
-        pool.query('INSERT INTO messages (sender, subject, message, recipient) VALUES ($1, $2, $3, $4)', [req.body.sender, req.body.subject, req.body.message, req.body.recipient], function(err, result) {
-            if (err) {
-                console.log(err);
-                resp.send({status: 'fail'});
-            } if (result !== undefined && result.rowCount > 0) {
-                resp.send({status: 'success'});
-            }
-        });
-    }
-});
-
-app.post('/revoke-applicant', function(req, resp) {
+/* app.post('/revoke-applicant', function(req, resp) {
     if (req.session.username) {
         pool.query('UPDATE applicants SET accepted = false WHERE application_id = $1', [req.body.application_id], function(err, result) {
             if (err) {
@@ -932,7 +932,7 @@ app.post('/revoke-applicant', function(req, resp) {
             }
         });
     }
-});
+}); */
 
 /* app.post('/job/start', function(req, resp) {
     if (req.session.username) {
@@ -1039,7 +1039,7 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                new_post_notification("[New Post] "+req.body.title);
+                new_post_notification("[New Post] " + req.body.title);
                 resp.send({status: 'success'});
             }
         });
@@ -1069,7 +1069,7 @@ app.get('/post-created', function(req, resp) {
 // ------------- Admin Panel --------------
 app.get("/admin-panel",function(req,res){
     if(req.session.role === 'admin'){
-        res.render("blocks/admin-panel");
+        res.render("blocks/admin-panel", {user: req.session});
     }else{
         res.render("blocks/login", {message:"Please login as admin"});
     }

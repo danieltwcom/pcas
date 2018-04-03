@@ -135,6 +135,29 @@ block content
                     .card-body
                         h3 Apply
                         hr
+                        each val, index in applicant
+                            .applicant.border-bottom.mb-2.pb-2
+                                .d-flex.justify-content-between.align-items-center.mx-auto
+                                    .w-5
+                                        img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                    .w-95
+                                        a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                        if applicant[index].is_screened
+                                            span.badge.badge-success.ml-1 Screened
+                                        else
+                                            span.badge.badge-secondary.ml-1 Unscreened
+                                        if applicant[index].verified
+                                            span.badge.badge-success.ml-1 Verified
+                                        else
+                                            span.badge.badge-secondary.ml-1 Unverified
+                                        - var applicantUpvoteNum = 0
+                                        each v, i in upvote
+                                            if upvote[i].voted_user_id === applicant[index].user_id
+                                                - applicantUpvoteNum++
+                                        span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
+                                .applicant-comment
+                                    label(for='comment') Comment:
+                                    |  #{applicant[index].comments}
                         - var applied = false
                         each val, index in applicant
                             if applicant[index].user_id === user.user_id

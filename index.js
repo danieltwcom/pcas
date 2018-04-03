@@ -20,17 +20,20 @@ const saltRounds = 10;
 var hashPass;
 
 //----------------PostgrSQL connection---------------
-
+if (process.env.NODE_ENV === 'production') {
+    pg.defaults.size = 20;
+    var pool = new pg.Client(process.env.DATABASE_URL);
+    pool.connect();
+} else {
     var pool = new pg.Pool({
         user: process.env.PGSQL_USER,
         host: process.env.DATABASE_URL,
         password:process.env.PGSQL_PASSWORD,
         database: process.env.PGSQL_DATABASE,
-        max: process.env.PGSQL_MAX,
+        max:process.env.PGSQL_MAX,
         port: process.env.DB_PORT
     });
-
-    console.log(pool);
+}
 
 // ---- Node Mailer setup ---- //
 let transporter = nodemailer.createTransport({
@@ -59,7 +62,7 @@ var upload = multer({ storage: storage });
 //-------------Sessions setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    maxAge: 600000 // 10 minutes
+    maxAge: 24 * 60 * 60 * 1000 // 10 minutes
 }));
 
 // Initializing PUG template
@@ -359,7 +362,7 @@ app.get('/edit-profile', function(req, resp) {
 
 app.get('/postings', function(req, resp) {
     if (req.session.username) {
-        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') AND is_archived = false ORDER BY coord_postings.date_created ASC", function(err, result) {
+        pool.query("SELECT * FROM coord_postings JOIN users ON coord_postings.user_id = users.user_id WHERE is_hidden = false AND progress NOT IN ('Complete') AND is_archived = false ORDER BY coord_postings.date_created DESC", function(err, result) {
             if (err) { console.log(err); }
 
             if (result !== undefined) {
@@ -372,7 +375,6 @@ app.get('/postings', function(req, resp) {
                 if (result !== undefined) {
                     var ti_postings = result.rows;
                 }
-                console.log(coord_postings, ti_postings);
 
                 resp.render('postings', {user: req.session, coord_postings: coord_postings, ti_postings: ti_postings});
             });

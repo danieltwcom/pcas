@@ -4,9 +4,13 @@ append scripts
     script(src='/scripts/edit-profile.js')
 
 block content
+    if message === 'invalid'
+        script.
+            alertify.parent(document.body);
+            alertify.alert('Invalid File Type')
     h3 Edit Profile
     .card.mb-3
-        .card-body.bg-light
+        .card-body
             form#edit_profile(action='/edit-profile', method='post')
                 .d-flex.justify-content-between
                     .form-group.w-45
@@ -51,7 +55,7 @@ block content
                     input.btn.btn-secondary(type='reset', value='Clear')
     h3 Change Email
     .card.mb-3
-        .card-body.bg-light
+        .card-body
             form#change-email(action='/change-email', method='post')
                 .d-flex.justify-content-between
                     .form-group.w-45
@@ -63,8 +67,8 @@ block content
                 .text-right
                     input#update_email.btn.btn-primary(type='submit', value='Update')
     h3 Change Password
-    .card
-        .card-body.bg-light
+    .card.mb-3
+        .card-body
             form#change-password(action='/change-password', method='post')
                 .d-flex.justify-content-between
                     .form-group.w-33
@@ -78,3 +82,29 @@ block content
                         input#confirm_password.form-control(type='password', name='confirm_password')
                 .text-right
                     input#update_pass.btn.btn-primary(type='submit', value='Update')
+    h3 Manage Documents
+    .card
+        .card-body.d-flex.justify-content-between
+            #documents.w-49
+                if documents.length > 0
+                    each val, index in documents
+                        div(id='document-' + documents[index].id).d-flex.justify-content-between.documents.mb-2.pd-2.border-bottom
+                            - var split_url = documents[index].url.split('.');
+                            - var extension = split_url.pop();
+                            .w-90
+                                img(src='/image/' + extension + '.png')
+                                a(href='/documents/' + documents[index].owner_id + '/' + documents[index].url) #{documents[index].title}
+                            .w-10
+                                form.delete-document(method='POST', action='/delete-document')
+                                    input(type='hidden', name='id', value=documents[index].id)
+                                    input.btn.btn-sm.btn-danger(type='submit', value='Delete')
+            .w-49
+                form.custom-file.mt-2(action='/upload-document', method='post', enctype='multipart/form-data')
+                    input#upload-file.custom-file-input(type='file', name='document')
+                    label#upload-filename.custom-file-label(for='customFile') Choose file
+                    small .gif .jpg .png .pdf .doc < 2 MB
+                    label.d-block(for='title').mt-2 Title/Name:
+                    input.form-control(type='text', name='title', maxlength='50', required)
+                    .text-right.mt-2
+                        input.btn.btn-sm.btn-primary.mr-1(type='submit', value='Upload')
+                        input.btn.btn-sm.btn-secondary#clear-upload(type='reset', value='Clear')

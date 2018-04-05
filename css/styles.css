@@ -3,6 +3,10 @@
 
 
 /* global */
+html {
+    position: relative;
+}
+
 html, body {
     min-height: 100%;
 }
@@ -36,10 +40,10 @@ label {
 
 /* main */
 #main {
-    min-height: 100vh;
+    min-height: 75vh;
 }
 
-/* profile.html */
+/* profile */
 #profile-description {
     resize: none;
 }
@@ -65,12 +69,27 @@ label {
     border-radius: 100%;
 }
 
-/* posting-details.html */
+.documents img {
+    height: 50px;
+}
+
+#credentials .card-body {
+    overflow-y: scroll;
+}
+
+/* posting-details */
 .applicant-comment, .applicant-comment label {
     font-size: 14px;
+}
+
+/* faq */
+.scroll-div {
+    overflow-y: scroll;
+    height: 75vh;
 }
 
 /* footer */
 #footer {
     height: 50px;
+    position: relative;
 }

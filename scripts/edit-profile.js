@@ -102,7 +102,7 @@ $(document).ready(function() {
 		regexTest(altPhone,"altPhone",phoneRegex)
 	}
 
-	$("form").submit(function(e){
+/* 	$("form").submit(function(e){
 		 e.preventDefault(e);
 		 console.log("success")
          for (var key in checkDic){
@@ -139,7 +139,7 @@ $(document).ready(function() {
         });
 
             })
-
+ */
 	
 
 
@@ -157,4 +157,72 @@ $(document).ready(function() {
         }
 			
 	}
-})
+
+	// deletes the credential from the user profile
+	/* $(document).on('submit', 'form.delete-credential', function(e) {
+		e.preventDefault();
+
+		$(this).remove();
+	}); */
+
+	$('.custom-file-input').on('change', function() {
+		let filepath = $(this).val();
+		let lastSlash = filepath.lastIndexOf('\\');
+		let filename = filepath.slice(lastSlash + 1);
+
+		$('#upload-filename').html(filename)
+	});
+
+	$('#clear-upload').on('click', function() {
+		$('#upload-filename').html('Choose file');
+	});
+
+/* 	$('.custom-file').on('submit', function(e) {
+		e.preventDefault();
+		var form = $(this);
+		var formData = new FormData(form[0]);
+		console.log(formData);
+		console.log($('#upload-file'));
+
+		jQuery.each(jQuery('#upload-file')[0].files, function(i, file) {
+			console.log(file);
+		});
+
+		$.ajax({
+			method: 'POST',
+			url: '/upload-document',
+			data: formData,
+			success: function(resp) {
+				$('#documents').append(
+					$('<div>').html(resp.id)
+				)
+			},
+			cache: false,
+			contentType: false,
+			processData: false
+		})
+	}) */
+
+	$('.delete-document').on('submit', function(e) {
+		e.preventDefault();
+
+		var form = $(this);
+
+		alertify
+		.okBtn('Yes')
+		.cancelBtn('No')
+		.confirm('Are you sure you want to delete this document', function(e) {
+			$.ajax({
+				method: 'POST',
+				url: '/delete-document',
+				data: form.serialize(),
+				success: function(resp) {
+					$('#document-' + resp.id).remove();
+					alertify.alert('Document deleted.');
+				}
+			});
+		}, function(e) {
+			return false;
+		});
+	});
+});

@@ -810,7 +810,7 @@ app.post('/upload-document', function(req, resp) {
             console.log(err);
             if (err.code === 'LIMIT_FILE_SIZE') {
                 resp.redirect('/edit-profile?error=big#documents');
-            } else if (err.code = 'INVALID_FILE_TYPE') {
+            } else if (err.code === 'INVALID_FILE_TYPE') {
                 resp.redirect('/edit-profile?error=invalid#documents');
             }
         }

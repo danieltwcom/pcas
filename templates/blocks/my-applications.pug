@@ -35,19 +35,15 @@ block content
                                         input(type='hidden', name='voter_id', value=applications[index].applicant_id)
                                         input.btn.btn-sm.btn-info(type='submit', value='Upvote User')
                         else
-                            form.form-inline.w-25.application-complete(action='/application/complete', method='POST')
+                            .w-25
                                 .w-50.text-center
-                                    span.badge.badge-primary.application-status Accepted
-                                .w-50.text-center
-                                    input(type='hidden', name='id', value=applications[index].application_id)
-                                    input(type='hidden', name='post_id', value=applications[index].post_id)
-                                    input(type='hidden', name='voted_user_id', value=applications[index].user_id)
-                                    input(type='hidden', name='voter_id', value=applications[index].applicant_id)
                                     if applications[index].progress === 'Open'
-                                        input.btn.btn-sm.btn-primary(type='submit', value='Job Complete', disabled)
-                                        span.badge.badge-secondary.ml-1(data-toggle='tooltip', data-placement='top', title='The job posting is still searching for applicants') ?
+                                        span.badge.badge-primary Open
+                                    else if applications[index].progress === 'Fulfilled'
+                                        span.badge.badge-info Fulfilled
                                     else if applications[index].progress === 'In Progress'
-                                        input.btn.btn-sm.btn-primary(type='submit', value='Job Complete')
+                                        span.badge.badge-warning In Progress
+                                .w-50
                     else
                         form.form-inline.w-25.application-withdraw(action='/application/withdraw', method='POST')
                             .w-50.text-center

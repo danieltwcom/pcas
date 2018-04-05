@@ -994,10 +994,9 @@ app.post('/new-post', function(req, resp) {
             if(err){
                 console.log(err);
             }else {
-                // for(i=0;i<result.rows.length;i++){
-                    // mailer.newPostNotification(mail_title,result.rows[i].email,post_url)
-                // }   
-                mailer.newPostNotification(mail_title,'wangyaofeng83@gmail.com',post_url)
+                for(i=0;i<result.rows.length;i++){
+                    mailer.newPostNotification(mail_title,result.rows[i].email,post_url)
+                }   
             }
         }) 
     }

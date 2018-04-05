@@ -146,17 +146,7 @@ var documentUpload = multer({
 
             if (filesize < 2000000) {
                 if (fs.existsSync(dir)) {
-                    if (fs.existsSync(profileDir)) {
-                        fs.readdir(profileDir, (err, files) => {
-                            if (err) { console.log(err); }
-        
-                            for (let file of files) {
-                                fs.unlinkSync(path.join(profileDir, file), err => {
-                                    if (err) { console.log(err); }
-                                });
-                            }
-                        });
-                    } else {
+                    if (!fs.existsSync(profileDir)) {
                         fs.mkdir(profileDir);
                     }
                 } else {
@@ -658,32 +648,66 @@ app.get('/register', function(req, resp) {
 
 app.get('/forgetPass',function(req,resp){
     resp.render('blocks/forget-pass')
-})
+});
 
-app.get('/messages', function(req, resp) {
+app.get('/inbox', function(req, resp) {
     if (req.session.username) {
-        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+        pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
             if (err) { console.log(err); }
 
-            var outbox = result.rows;
-
-            pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
-                if (err) { console.log(err); }
-
-                var inbox = result.rows;
-
-                resp.render('blocks/messages', {user: req.session, outbox: outbox, inbox: inbox});
-            });
+            if (result !== undefined) {
+                resp.render('blocks/inbox', {user: req.session, inbox: result.rows});
+            }
         });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
 });
 
-
-/* app.get('/compose', function(req, resp) {
+app.get('/outbox', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/compose', {user: req.session});
+        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            resp.render('blocks/outbox', {user: req.session, outbox: result.rows});
+        });
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
+
+app.post('/get-message-count', function(req, resp) {
+    if (req.session.username) {
+        pool.query('SELECT COUNT(*) as message_count FROM messages WHERE recipient = $1 AND is_read = false', [req.body.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            resp.send({message_count: result.rows[0].message_count});
+        });
+    }
+});
+
+
+app.get('/compose', function(req, resp) {
+    if (req.session.username) {
+        var recipient = '';
+
+        if (req.query.recipient) {
+            var recipient = req.query.recipient;
+        }
+
+        if (req.query.id) {
+            pool.query('SELECT * FROM messages WHERE message_id = $1 AND sender = $2 AND recipient = $3', [req.query.id, recipient, req.session.username], function(err, result) {
+                if (err) { console.log(err); }
+
+                if (result !== undefined && result.rows.length > 0) {
+                    resp.render('blocks/compose', {user: req.session, recipient: recipient, message: result.rows[0]});
+                } else if (result !== undefined && result.rows.length === 0) {
+                    resp.render('blocks/404', {user: req.session});
+                }
+            })
+        } else {
+            resp.render('blocks/compose', {user: req.session, recipient: recipient});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -691,7 +715,21 @@ app.get('/messages', function(req, resp) {
 
 app.get('/message-details', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/message-details', {user: req.session});
+        console.log(req.query.id);
+        pool.query('UPDATE messages SET is_read = true WHERE message_id = $1 AND (sender = $2 OR recipient = $3)', [req.query.id, req.session.username, req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            pool.query('SELECT * FROM messages WHERE message_id = $1 AND (sender = $2 OR recipient = $3) ORDER BY date_created DESC', [req.query.id, req.session.username, req.session.username], function(err, result) {
+                if (err) {
+                    console.log(err);
+                } else if (result !== undefined && result.rows.length > 0) {
+                    console.log(result.rows);
+                    resp.render('blocks/message-details', {user: req.session, message: result.rows[0]});
+                } else if (result !== undefined && result.rows.length === 0) {
+                    resp.render('blocks/404', {user: req.session});
+                }
+            });
+        });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -699,7 +737,7 @@ app.get('/message-details', function(req, resp) {
 
 app.get('/sent', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/message-sent', {message: 'Message has been sent'});
+        resp.render('blocks/message-action', {user: req.session, message: 'Message has been sent'});
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -716,7 +754,7 @@ app.post('/send-message', function(req, resp) {
             }
         });
     }
-}); */
+});
 
 app.get('/create-post', function(req, resp) {
     console.log(req.session);
@@ -817,7 +855,9 @@ app.post('/upload-document', function(req, resp) {
 
         if (req.file !== undefined) {
             if (req.file.mimetype === 'application/pdf' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/msword' || req.file.mimetype === 'image/png') {
-                pool.query('INSERT INTO documents (url, owner_id, title) VALUES ($1, $2, $3)', [req.file.filename, req.session.user_id, req.body.title], function(err, result) {
+                let documentUrl = '/files/' + req.session.user_id + '/documents/' + req.file.filename;
+
+                pool.query('INSERT INTO documents (url, owner_id, title) VALUES ($1, $2, $3)', [documentUrl, req.session.user_id, req.body.title], function(err, result) {
                     if (err) { console.log(err); }
                     
                     if (result !== undefined && result.rowCount > 0) {
@@ -831,11 +871,15 @@ app.post('/upload-document', function(req, resp) {
 
 app.post('/delete-document', function(req, resp) {
     if (req.session.username) {
-        pool.query('DELETE FROM documents WHERE id = $1 RETURNING id', [req.body.id], function(err, result) {
+        pool.query('DELETE FROM documents WHERE id = $1 RETURNING *', [req.body.id], function(err, result) {
             if (err) {
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                resp.send({status: 'successs', id: result.rows[0].id});
+                let filePathSplit = result.rows[0].url.split('/');
+                let file = '/users-file/' + filePathSplit[2] + '/' + filePathSplit[3] + '/' + filePathSplit[4];
+                fs.unlink(__dirname + file, function(err) {
+                    resp.send({status: 'successs', id: result.rows[0].id});
+                });
             }
         });
     }

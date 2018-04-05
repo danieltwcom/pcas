@@ -211,7 +211,7 @@ $(document).ready(function() {
 		alertify
 		.okBtn('Yes')
 		.cancelBtn('No')
-		.confirm('Are you sure you want to delete this document', function(e) {
+		.confirm('Are you sure you want to delete this document?', function(e) {
 			$.ajax({
 				method: 'POST',
 				url: '/delete-document',

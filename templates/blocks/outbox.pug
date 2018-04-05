@@ -1,0 +1,29 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/messages.js')
+
+block content
+    h3 Outbox
+    .mb-2
+        a(href='/compose')
+            button.btn.btn-primary.mr-1(type='button') Compose
+        a(href='/inbox')
+            button.btn.btn-secondary.mr-1(type='button') Inbox
+        a(href='/outbox')
+            button.btn.btn-light.mr-1(type='button') Outbox
+    .card#outbox
+        .card-body
+            table.table.table-striped.table-light.table-bordered
+                thead
+                    tr
+                        th Subject
+                        th.w-15 Recipient
+                        th.w-15 Date Sent
+                tbody
+                    each v, i in outbox
+                        tr
+                            td
+                                a(href='/message-details?id=' + outbox[i].message_id) #{outbox[i].subject}
+                            td #{outbox[i].recipient}
+                            td #{outbox[i].date_created.toDateString()}

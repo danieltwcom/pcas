@@ -6,4 +6,10 @@ nav.navbar.navbar-light.bg-light.mb-3
             img.w-100(src='/image/bcit.svg')
         h3 Post-Secondary Communications Access Services
     if user
-        .w-15.text-right Logged in as #{user.username}
+        .d-flex.justify-content-end.w-15
+            #profile-pic-div-mini.mr-2(style='background: url("' + user.avatar_url + '") no-repeat; background-size: cover')
+            div
+                div
+                    a(href='/profile?user_id=' + user.user_id) #{user.username}
+                a(href='/inbox')
+                    button.btn.btn-sm.btn-primary#message-notification(type='button') Messages

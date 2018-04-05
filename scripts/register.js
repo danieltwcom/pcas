@@ -12,6 +12,7 @@ $(document).ready(function() {
 	var phone = register_from.elements['phone'];
 	var altPhone = register_from.elements['other_phone'];
 	var desp = register_from.elements['description'];
+	var agree = register_from.elements['agree']
 	
 	var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
 	var nameRegex = /^[a-zA-Z]{1,15}$/;
@@ -155,7 +156,7 @@ $(document).ready(function() {
 	
 
 	 $("form").submit(function(e){
-		 e.preventDefault(e);
+		 e.preventDefault();
 		 console.log("success")
          for (var key in checkDic){
 			if (checkDic[key] == 0){
@@ -179,15 +180,17 @@ $(document).ready(function() {
 				school:school.value,
 				phone:phone.value,
 				otherPhone:altPhone.value,
-				desp:desp.value
+				desp:desp.value,
+				agree:agree.value
             },
             success:function(resp) {
                 if(resp.status=="success"){
                     location.href = '/pleaseVerify';
-                }
-                if(resp.status=="fail"){
-                    alert(resp.message)
-                }
+                } else if(resp.status=="fail"){
+                    alert.alertify(resp.message)
+                } else if (resp.status === 'disagree') {
+					alertify.alert('You must agree with the terms and services to complete the registration');
+				}
 				
             }
         });

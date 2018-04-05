@@ -1,0 +1,46 @@
+extends ../layout
+
+block content
+    .container-fluid
+        .row
+            .col-4
+                .card
+                    .card-body
+                        li
+                            a(href='#one') What does it mean when a user is verified?
+                        li
+                            a(href='#two') What does it mean when a user is screened?
+                        li
+                            a(href='#three') Do I have to upvote users whom I worked with?
+                        li
+                            a(href='#four') As an interpreter/transcriber, I've completed a job but the status is still showing "Fulfilled" or "In Progress", why is that?
+                        li
+                            a(href='#five') Is there a way to delete posts that I've created?
+            .col-8
+                .card
+                    .card-body.scroll-div
+                        #one
+                            b What does it mean when a user is verified?
+                            br
+                            | Verified users are users who have received the required number of upvotes from other users who they've worked with. This shows that the user has good reputation and is a legitimate user to work with. However, that doesn't mean unverified users are not legitimate, they just haven't gained enough reputation yet amongst the community.
+                            hr
+                        #two
+                            b What does it mean when a user is screened?
+                            br
+                            | Screened users are users who have past the four tests that proves their qualification in their fields of study. If you would like to become screened, please contact the administrator.
+                            hr
+                        #three
+                            b Do I have to upvote users whom I worked with?
+                            br
+                            | No, but the option to remains available.
+                            hr
+                        #four
+                            b As an interpreter/transcriber, I've completed a job but the status is still showing "Fulfilled" or "In Progress", why is that?
+                            br
+                            | The status of the job can only be changed by the coordinator. If you've completed a job but the status is not "Complete", you can either contact the coordinator to remind him/her or contact the administrator.
+                            hr
+                        #five
+                            b Is there a way to delete posts that I've created?
+                            br
+                            | No, but you can archive them. Note that if you choose to archive them, you cannot unarchive them. Archived posts will not be shown to other users.
+                            hr

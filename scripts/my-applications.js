@@ -27,22 +27,7 @@ $(document).ready(function() {
                             .okBtn('Yes')
                             .cancelBtn('No')
                             .confirm('Do you want to upvote this employer?', function(e) {
-                                $.ajax({
-                                    method: 'POST',
-                                    url: '/application/upvote',
-                                    data: form.serialize(),
-                                    success: function(resp) {
-                                        console.log(resp);
-                                        if (resp.status === 'voted') {
-                                            alertify.alert('You can only vote once per completed job.');
-                                        } else if (resp.status === 'incomplete') {
-                                            alertify.alert('You must complete the job first before upvoting.');
-                                        } else if (resp.status === 'success') {
-                                            alertify.alert('Upvoted.');
-                                            $(form).find('input').remove();
-                                        }
-                                    }
-                                });
+                                upvote(form);
                             }, function(e) {
                                 return false;
                             });

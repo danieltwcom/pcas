@@ -45,8 +45,25 @@ var emailForgetPass = function(req,res,next){
           });
 }
 
+let newPostNotification = function (mail_title,email,post_url){
+    let mailOptions = {
+        from:'pcasnotification@gmail.com',
+        to: email,
+        subject:mail_title,
+        html:"Check out the post "+"<a href='http://"+post_url+"'>here</a>"// todo
+    }
+    transporter.sendMail(mailOptions,function(err,info){
+        if(err){
+            console.log(err)
+        }else{
+            console.log('Email sent: '+ info.response);
+        }
+    })
+}
+
 module.exports = {
 	emailVerify:emailVerify,
-  emailForgetPass:emailForgetPass
+    emailForgetPass:emailForgetPass,
+    newPostNotification:newPostNotification
 }
 

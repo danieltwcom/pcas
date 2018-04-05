@@ -7,7 +7,11 @@ block content
     if message === 'invalid'
         script.
             alertify.parent(document.body);
-            alertify.alert('Invalid File Type')
+            alertify.alert('Invalid file type.')
+    else if message === 'big'
+        script.
+            alertify.parent(document.body);
+            alertify.alert('File is too big.')
     h3 Edit Profile
     .card.mb-3
         .card-body

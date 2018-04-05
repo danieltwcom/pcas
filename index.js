@@ -46,27 +46,11 @@ var storage = multer.diskStorage({
     destination: function(req, file, cb) {
         let dir = 'users-file/' + req.session.user_id;
         let profileDir = dir + '/profile-pic';
-        console.log(file);
 
         if (fs.existsSync(dir)) {
-            if (fs.existsSync(profileDir)) {
-                fs.readdir(profileDir, (err, files) => {
-                    if (err) { console.log(err); }
-
-                    for (let file of files) {
-                        fs.unlinkSync(path.join(profileDir, file), err => {
-                            if (err) { console.log(err); }
-                        });
-                    }
-
-                    cb(null, profileDir);
-                });
-            } else {
-                fs.mkdir(profileDir, err => cb(err, profileDir));
-            }
+            cb(null, profileDir);
         } else {
-            fs.mkdir(dir);
-            fs.mkdir(profileDir, err => cb(err, profileDir));
+            return cb(new Error('DIR_NOT_EXIST'));
         }
     },
     filename: function(req, file, cb) {
@@ -76,7 +60,53 @@ var storage = multer.diskStorage({
     }
 });
 
-var upload = multer({ storage: storage });
+var upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 2000000
+    },
+    fileFilter: function(req, file, cb) {
+        let extension = path.extname(file.originalname);
+        let extRegex = /\.(jpg|jpeg|png|gif)$/
+
+        if (extRegex.test(extension) === false) {
+            let error = new Error('Wrong file type');
+            error.code = 'INVALID_FILE_TYPE';
+            return cb(error);
+        } else {
+            let filesize = parseInt(req.headers['content-length']);
+            let dir = 'users-file/' + req.session.user_id;
+            let profileDir = dir + '/profile-pic';
+
+            if (filesize < 2000000) {
+                if (fs.existsSync(dir)) {
+                    if (fs.existsSync(profileDir)) {
+                        fs.readdir(profileDir, (err, files) => {
+                            if (err) { console.log(err); }
+        
+                            for (let file of files) {
+                                fs.unlinkSync(path.join(profileDir, file), err => {
+                                    if (err) { console.log(err); }
+                                });
+                            }
+                        });
+                    } else {
+                        fs.mkdir(profileDir);
+                    }
+                } else {
+                    fs.mkdir(dir);
+                    fs.mkdir(profileDir);
+                }
+            } else {
+                let error = new Error('File too big');
+                error.code = 'LIMIT_FILE_SIZE';
+                return cb(error);
+            }
+        }
+
+        cb(null, true);
+    }
+});
 
 var documentStorage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -84,14 +114,9 @@ var documentStorage = multer.diskStorage({
         let documentDir = dir + '/documents';
 
         if (fs.existsSync(dir)) {
-            if (fs.existsSync(documentDir)) {
-                cb(null, documentDir);
-            } else {
-                fs.mkdir(documentDir, err => cb(err, documentDir));
-            }
+            cb(null, profileDir);
         } else {
-            fs.mkdir(dir);
-            fs.mkdir(documentDir, err => cb(err, documentDir));
+            return cb(new Error('DIR_NOT_EXIST'));
         }
     },
     filename: function(req, file, cb) {
@@ -101,7 +126,53 @@ var documentStorage = multer.diskStorage({
     }
 });
 
-var documentUpload = multer({ storage: documentStorage });
+var documentUpload = multer({
+    storage: documentStorage,
+    limits: {
+        fileSize: 2000000
+    },
+    fileFilter: function(req, file, cb) {
+        let extension = path.extname(file.originalname);
+        let extRegex = /\.(jpg|jpeg|png|gif|pdf|doc)$/
+
+        if (extRegex.test(extension) === false) {
+            let error = new Error('Wrong file type');
+            error.code = 'INVALID_FILE_TYPE';
+            return cb(error);
+        } else {
+            let filesize = parseInt(req.headers['content-length']);
+            let dir = 'users-file/' + req.session.user_id;
+            let profileDir = dir + '/documents';
+
+            if (filesize < 2000000) {
+                if (fs.existsSync(dir)) {
+                    if (fs.existsSync(profileDir)) {
+                        fs.readdir(profileDir, (err, files) => {
+                            if (err) { console.log(err); }
+        
+                            for (let file of files) {
+                                fs.unlinkSync(path.join(profileDir, file), err => {
+                                    if (err) { console.log(err); }
+                                });
+                            }
+                        });
+                    } else {
+                        fs.mkdir(profileDir);
+                    }
+                } else {
+                    fs.mkdir(dir);
+                    fs.mkdir(profileDir);
+                }
+            } else {
+                let error = new Error('File too big');
+                error.code = 'LIMIT_FILE_SIZE';
+                return cb(error);
+            }
+        }
+
+        cb(null, true);
+    }
+});
 
 //-------------Sessions setup
 app.use(session({
@@ -392,6 +463,14 @@ app.get('/profile', function(req, resp) {
     var userId = req.query.user_id;
 
     if (req.session.username) {
+        var message = '';
+
+        if (req.query.error === 'invalid') {
+            var message = 'invalid';
+        } else if (req.query.error === 'big') {
+            var message = 'big';
+        }
+
         pool.query('SELECT * FROM users WHERE user_id = $1', [userId], function(err, result) {
             if (err) { console.log(err); }
 
@@ -407,7 +486,7 @@ app.get('/profile', function(req, resp) {
 
                     pool.query('SELECT * FROM upvotes', function(err, result) {
                         if (err) { console.log(err); }
-                        resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows, documents: documents});
+                        resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows, documents: documents, message: message});
                     });
                 });
             }
@@ -445,6 +524,8 @@ app.get('/edit-profile', function(req, resp) {
 
         if (req.query.error === 'invalid') {
             var message = 'invalid';
+        } else if (req.query.error === 'big') {
+            var message = 'big';
         }
 
         pool.query('SELECT * FROM documents WHERE owner_id = $1', [req.session.user_id], function(err, result) {
@@ -694,22 +775,29 @@ app.post('/upload-profile-pic', function(req, resp) {
     let uploadProfilePic = upload.single('profile_pic');
 
     uploadProfilePic(req, resp, function(err) {
-        console.log(req.file);
-        if (err) { console.log(err); }
-        
-        if (req.file.size > 2000000) {
-            resp.send({status: 'filesize too big'});
+        if (err) {
+            console.log(err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=big');
+            } else if (err.code = 'INVALID_FILE_TYPE') {
+                console.log(err.code);
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=invalid');
+            }
         }
 
-        if (req.file.mimetype === 'image/png' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/pdf') {
-            pool.query('UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING avatar_url', [req.file.filename, req.session.user_id], function(err, result) {
-                if (err) { console.log(err); }
-                
-                req.session.avatar_url = result.rows[0].avatar_url;
-                resp.redirect('/profile?user_id=' + req.session.user_id);
-            })
-        } else {
-            resp.send({status: 'invalid file type'});
+        if (req.file !== undefined) {
+            if (req.file.mimetype === 'image/png' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg') {
+                let avatarUrl = '/files/' + req.session.user_id + '/profile-pic/' + req.file.filename;
+    
+                pool.query('UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING avatar_url', [avatarUrl, req.session.user_id], function(err, result) {
+                    if (err) { console.log(err); }
+                    
+                    req.session.avatar_url = result.rows[0].avatar_url;
+                    resp.redirect('/profile?user_id=' + req.session.user_id);
+                })
+            } else {
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=invalid');
+            }
         }
     });
 });
@@ -718,23 +806,25 @@ app.post('/upload-document', function(req, resp) {
     let uploadDocument = documentUpload.single('document');
 
     uploadDocument(req, resp, function(err) {
-        if (err) { console.log(err); }
-
-        console.log(req.file);
-        if (req.file.size > 2000000) {
-            resp.send({status: 'filesize too big'});
+        if (err) {
+            console.log(err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                resp.redirect('/edit-profile?error=big#documents');
+            } else if (err.code = 'INVALID_FILE_TYPE') {
+                resp.redirect('/edit-profile?error=invalid#documents');
+            }
         }
 
-        if (req.file.mimetype === 'application/pdf' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/msword' || req.file.mimetype === 'image/png') {
-            pool.query('INSERT INTO documents (url, owner_id, title) VALUES ($1, $2, $3)', [req.file.filename, req.session.user_id, req.body.title], function(err, result) {
-                if (err) { console.log(err); }
-                
-                if (result !== undefined && result.rowCount > 0) {
-                    resp.redirect('/edit-profile');
-                }
-            });
-        } else {
-            resp.redirect('/edit-profile?error=invalid');
+        if (req.file !== undefined) {
+            if (req.file.mimetype === 'application/pdf' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/msword' || req.file.mimetype === 'image/png') {
+                pool.query('INSERT INTO documents (url, owner_id, title) VALUES ($1, $2, $3)', [req.file.filename, req.session.user_id, req.body.title], function(err, result) {
+                    if (err) { console.log(err); }
+                    
+                    if (result !== undefined && result.rowCount > 0) {
+                        resp.redirect('/edit-profile#documents');
+                    }
+                });
+            }
         }
     });
 });
@@ -1187,7 +1277,7 @@ app.get('/post-created', function(req, resp) {
 // ------------- Admin Panel --------------
 app.get("/admin-panel",function(req,res){
     if(req.session.role === 'admin'){
-        res.render("blocks/admin-panel", {user: req.session});
+        res.render("blocks/admin-panel");
     }else{
         res.render("blocks/login", {message:"Please login as admin"});
     }

@@ -4,6 +4,14 @@ append scripts
     script(src='/scripts/profile.js')
 
 block content
+    if message === 'invalid'
+        script.
+            alertify.parent(document.body);
+            alertify.alert('Invalid file type.')
+    else if message === 'big'
+        script.
+            alertify.parent(document.body);
+            alertify.alert('File is too big.')
     .row
         .col-3
             .card
@@ -15,7 +23,7 @@ block content
                                 input#profile-pic-input.d-none(name='profile_pic', type='file')
                                 button#upload-profile-pic-button.btn.btn-success(type='button', data-toggle='tooltip', data-placement='top', title='Consider using a perfect square image')
                                     i.fa.fa-plus(aria-hidden='true')
-                        #profile-pic-div(style='background: url("/files/' + viewing.user_id + '/profile-pic/' + viewing.avatar_url + '") no-repeat; background-size: cover')
+                        #profile-pic-div(style='background: url("' + viewing.avatar_url + '") no-repeat; background-size: cover')
                             //--img.w-75.d-block.rounded-circle.mx-auto(src='/files/' + user.avatar_url)
                     .mb-2.d-flex.justify-content-end
                         h5
@@ -62,7 +70,7 @@ block content
                         .d-flex.justify-content-end
                             button#edit-profile-button.btn.btn-primary.btn-sm(type='button') Edit Profile
         .col-4
-            #credentials.card.mb-3.h-50
+            #credentials.card.mb-3
                 .card-body
                     h3 Documents
                     //--if user.user_id === viewing.user_id
@@ -91,6 +99,8 @@ block content
                             - var extension = split_url.pop()
                             img(src='/image/' + extension + '.png')
                             a(href='/documents/' + documents[index].owner_id + '/' + documents[index].url) #{documents[index].title}
+                    .text-right
+                        a(href='/edit-profile#documents') Upload Documents
             #activities.card
                 .card-body
                     h3 Activites

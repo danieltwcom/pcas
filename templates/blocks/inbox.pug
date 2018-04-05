@@ -1,0 +1,37 @@
+extends ../layout
+
+append scripts
+    script(src='/scripts/messages.js')
+
+block content
+    h3 Inbox
+    .mb-2
+        a(href='/compose')
+            button.btn.btn-primary.mr-1(type='button') Compose
+        a(href='/inbox')
+            button.btn.btn-light.mr-1(type='button') Inbox
+        a(href='/outbox')
+            button.btn.btn-secondary.mr-1(type='button') Outbox
+    .card#inbox
+        .card-body
+            table.table.table-striped.table-light.table-bordered
+                thead
+                    tr
+                        th Subject
+                        th.w-15 Sender
+                        th.w-25 Date Received
+                tbody
+                    each v, i in inbox
+                        if inbox[i].is_read === false
+                            tr.font-weight-bold
+                                td
+                                    a(href='/message-details?id=' + inbox[i].message_id) #{inbox[i].subject}
+                                    span.badge.badge-primary.ml-1 New
+                                td #{inbox[i].sender}
+                                td #{convertDate(inbox[i].date_created, true)}1
+                        else
+                            tr
+                                td
+                                    a(href='/message-details?id=' + inbox[i].message_id) #{inbox[i].subject}
+                                td #{inbox[i].sender}
+                                td #{convertDate(inbox[i].date_created, true)}

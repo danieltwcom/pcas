@@ -97,7 +97,7 @@ block content
                             - var extension = split_url.pop();
                             .w-90
                                 img(src='/image/' + extension + '.png')
-                                a(href='/documents/' + documents[index].owner_id + '/' + documents[index].url) #{documents[index].title}
+                                a(href=documents[index].url) #{documents[index].title}
                             .w-10
                                 form.delete-document(method='POST', action='/delete-document')
                                     input(type='hidden', name='id', value=documents[index].id)

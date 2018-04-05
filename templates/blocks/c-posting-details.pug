@@ -109,8 +109,11 @@ block content
                                                     input(type='hidden', name='voter_id', value=applicant[index].user_id)
                                                     input(type='hidden', name='voted_user_id', value=applicant[index].applicant_id)
                                                     input.btn.btn-info.btn-sm(type='submit', value='Upvote User')
-                                            a(href='mailto:' + applicant[index].email)
-                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Email
+                                            a(href='/compose?recipient=' + applicant[index].username)
+                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Message
+                                            if applicant[index].hide_email === false
+                                                a(href='mailto:' + applicant[index].email)
+                                                    button.btn.btn-primary.btn-sm.mr-1(type='button') Email
                                             if applicant[index].accepted === false
                                                 form.accept-applicant(method='POST', action='/accept-applicant')
                                                     input(type='hidden', name='application_id', value=applicant[index].application_id)

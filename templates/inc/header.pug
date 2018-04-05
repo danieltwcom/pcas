@@ -10,3 +10,7 @@ block scripts
     link(rel='stylesheet', href='/style/styles.css')
     link(rel='stylesheet', href='/style/font-awesome.min.css')
     link(rel='stylesheet', href='/style/alertify.css')
+    if user
+        script.
+            var username = !{JSON.stringify(user.username)}
+        script(src='/scripts/message-count.js')

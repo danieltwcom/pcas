@@ -35,15 +35,6 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-// ---- Node Mailer setup ---- //
-let transporter = nodemailer.createTransport({
-    service:"gmail",
-    auth:{
-        user:'pcasnotification@gmail.com',
-        pass:'pcaspassword'
-    }
-})
-
 // initialize body parser
 app.use(bodyParser.urlencoded({
     extended: true
@@ -997,30 +988,20 @@ app.get('/pleaseVerify',function(req,resp){
 
 // Create
 app.post('/new-post', function(req, resp) {
-    function new_post_notification(mail_title){
+    function getNoticeUser(mail_title,post_url){
         pool.query("SELECT email FROM users WHERE email_notification = true",[]
         ,function(err,result){
             if(err){
                 console.log(err);
             }else {
-                for(i=0;i<result.rows.length;i++){
-                    let mailOptions = {
-                        from:'pcasnotification@gmail.com',
-                        to: result.rows[i].email,
-                        subject:mail_title,
-                        text:"Check out the post here: "+"post_url"// todo
-                    }
-                    transporter.sendMail(mailOptions,function(err,info){
-                        if(err){
-                            console.log(err)
-                        }else{
-                            console.log('Email sent: '+ info.response);
-                        }
-                    })
-                }   
+                // for(i=0;i<result.rows.length;i++){
+                    // mailer.newPostNotification(mail_title,result.rows[i].email,post_url)
+                // }   
+                mailer.newPostNotification(mail_title,'wangyaofeng83@gmail.com',post_url)
             }
         }) 
     }
+    
     if (req.session.role === 'coordinator') {
         if (req.body.is_verified) {
             var isVerified = true;
@@ -1034,24 +1015,24 @@ app.post('/new-post', function(req, resp) {
             var isScreened = false;
         }
 
-        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day, course_number, time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, req.body.course_number, req.body.time], function(err, result) {
+        pool.query('INSERT INTO coord_postings (title, school, detail, user_id, type, num_of_interpreter, num_of_transcriber, verified, screened, on_what_day, course_number, time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING post_id', [req.body.title, req.body.school, req.body.details, req.session.user_id, req.body.type, req.body.how_many_int, req.body.how_many_tra, isVerified, isScreened, req.body.when, req.body.course_number, req.body.time], function(err, result) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                new_post_notification("[New Post] " + req.body.title);
+                getNoticeUser("[New Post] " + req.body.title,req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=coordinator');
                 resp.send({status: 'success'});
             }
         });
     } else if (req.session.role === 'ti') {
         var daysAvailable = req.body.days.join(', ');
 
-        pool.query('INSERT INTO ti_postings (title, time_available, days_available, recurring, user_id, starting, details) VALUES ($1, $2, $3, $4, $5, $6, $7)', [req.body.title, req.body.time, daysAvailable, req.body.recurring, req.session.user_id, req.body.starting, req.body.details], function(err, result) {
+        pool.query('INSERT INTO ti_postings (title, time_available, days_available, recurring, user_id, starting, details) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING post_id', [req.body.title, req.body.time, daysAvailable, req.body.recurring, req.session.user_id, req.body.starting, req.body.details], function(err, result) {
             if (err) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                new_post_notification("[New Post] "+req.body.title);
+                getNoticeUser("[New Post] "+req.body.title, req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=ti');
                 resp.send({status: 'success'});
             }
         });

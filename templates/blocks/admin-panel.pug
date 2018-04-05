@@ -23,6 +23,8 @@ block content
                     a#manage_user_btn(href="#") Manage Users
                     a#manage_post_btn(href="#") Manage Posts
                     a#manage_statistic_btn(href="#") Statistic
+                    a(href="/postings") View Postings
+                    a(href="/logout") Logout
 
         //- ------ Manage Users ------
         #manage-user.content.container
@@ -44,7 +46,7 @@ block content
                         a#verify_btn.dropdown-item(href="#") Verify
                         a#screen_btn.dropdown-item(href="#") Screen
                         a#promote_btn.dropdown-item(href="#") Promote Admin
-                        a#delete_btn.dropdown-item(href="#") Delete
+                        a#delete_btn.dropdown-item(href="#") Suspend
             
             //- found user table
             table#user_table.table.table-light.table-hover.mt-2
@@ -85,7 +87,7 @@ block content
                         a#complete_post_btn.dropdown-item(href="#") Complete
                         label.ml-3 Manage Post
                         a#modify_post_btn.dropdown-item(href="#") Modify
-                        a#delete_post_btn.dropdown-item(href="#") Delete
+                        a#delete_post_btn.dropdown-item(href="#") Suspend
             
             //- table tabs
             ul#myTab.nav.nav-tabs.mt-2(role='tablist')

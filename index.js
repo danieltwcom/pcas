@@ -114,7 +114,7 @@ var documentStorage = multer.diskStorage({
         let documentDir = dir + '/documents';
 
         if (fs.existsSync(dir)) {
-            cb(null, profileDir);
+            cb(null, documentDir);
         } else {
             return cb(new Error('DIR_NOT_EXIST'));
         }

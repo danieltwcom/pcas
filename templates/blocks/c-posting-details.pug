@@ -86,7 +86,7 @@ block content
                                 .applicant.border-bottom.mb-2.pb-2
                                     .d-flex.justify-content-between.align-items-center.mx-auto
                                         .w-5
-                                            img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
                                         .w-75
                                             a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
                                             if applicant[index].is_screened
@@ -140,7 +140,7 @@ block content
                                 .applicant.border-bottom.mb-2.pb-2
                                     .d-flex.justify-content-between.align-items-center.mx-auto
                                         .w-5
-                                            img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
                                         .w-95
                                             a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
                                             if applicant[index].is_screened

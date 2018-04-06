@@ -100,7 +100,12 @@ $(document).ready(function(){
                         tr.appendChild(user_id);
 
                         let username = document.createElement("td");
-                        username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a>';
+                        username.id = "table_username";
+                        if(res[i].suspended == true){
+                            username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a><span style="color:red; font-size:10px;">suspended</span>';
+                        }else{
+                            username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a>';
+                        }
                         tr.appendChild(username);
 
                         let email = document.createElement("td");
@@ -219,9 +224,40 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res)
                 if(res.status=="success"){
-                    alert("Successfully delete "+res.row_updated+" users")
+                    alert("Successfully suspended "+res.row_updated+" users")
                     for(i=0;i<selected_user.length;i++){
-                        $(selected_user[i]).parents("tr").remove();
+                        $(selected_user[i]).parents("tr").find("#table_username").append('<span style="color:red; font-size:10px;">suspended</span>')
+                    }
+                }else if ("fail"){
+                    alert("Delete fail please contact tech support")
+                }
+                
+            }
+        })
+    })
+
+    // --- undo delete user ---
+    $("#undo_delete_btn").click(function(){
+        let selected_user = $("#selected_user:checked");
+        let update_user_array = [];
+
+        for (i=0;i<selected_user.length;i++){
+            update_user_array.push(selected_user[i].value)
+        }
+        console.log(update_user_array);
+        $.ajax({
+            url:"/manage-user",
+            type:"post",
+            data:{
+                type:"undo-delete",
+                user_array: update_user_array,
+            },
+            success:function(res){
+                console.log(res)
+                if(res.status=="success"){
+                    alert("Successfully unsuspended "+res.row_updated+" users")
+                    for(i=0;i<selected_user.length;i++){
+                        let o_html = $(selected_user[i]).parents("tr").find("#table_username span").remove();
                     }
                 }else if ("fail"){
                     alert("Delete fail please contact tech support")

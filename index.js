@@ -1332,7 +1332,7 @@ app.post("/manage-user",function(req,res){
     // search user
     if(req.body.type == "get"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT * FROM users WHERE username LIKE $1 OR email LIKE $1 OR CAST(user_id as varchar) =$2 ORDER BY user_id"
+        pool.query("SELECT * FROM users WHERE LOWER(username) LIKE LOWER($1) OR LOWER(email) LIKE LOWER($1) OR CAST(user_id as varchar) =$2 ORDER BY user_id"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){
@@ -1408,30 +1408,48 @@ app.post("/manage-user",function(req,res){
                 user_arr_sql+=user_array[i]+","
             }
         }
-        pool.query("DELETE FROM upvotes WHERE voter_id IN "+user_arr_sql
+        pool.query("UPDATE users SET suspended=true WHERE user_id IN "+user_arr_sql
         ,[]
         ,function(err,result){
             if(err){
                 console.log(err);
                 res.send({status:"fail"});
             }else{
-                pool.query("DELETE FROM users WHERE user_id IN "+user_arr_sql
-                ,[]
-                ,function(err,result){
-                    if(err){
-                        console.log(err);
-                        res.send({status:"fail"});
-                    }else{
-                        res.send({
-                            status:"success",
-                            row_updated:result.rowCount,
-                        })
-                    }
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
                 })
             }
         })
         
     }
+    // unsuspend user
+    if(req.body.type == "undo-delete"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET suspended=false WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+
     // promote user
     if(req.body.type == "promote"){
         let user_array = req.body.user_array;
@@ -1489,7 +1507,7 @@ app.post("/manage-post",function(req,res){
     // search post from coordinator postings
     if(req.body.type=="get-co"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE title LIKE $1 OR CAST(post_id as varchar) = $2 ORDER BY post_id"
+        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2 ORDER BY post_id"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){
@@ -1505,7 +1523,7 @@ app.post("/manage-post",function(req,res){
     // search post from interpreter postings
     if(req.body.type=="get-ti"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (title LIKE $1 OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
+        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){

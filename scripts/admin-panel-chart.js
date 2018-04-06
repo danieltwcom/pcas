@@ -7,22 +7,24 @@ $(document).ready(function(){
         $(e.currentTarget).find(".custom-card-text").css("display","none")
     })
 
+    let clicked_e;
     $(".card").click(function(e){
         // if clicked x close_card button
         if(e.target.id == "close_card"){
             close_card(e)
         }else{
+            clicked_e=e;
             open_card(e)
         }
         
     });
     
-    // $(window).click((e)=>{
-    //     console.log(e.target.contains(document.getElementsByClassName('card')))
-    //     if(e.target){
-    //         close_card(e);
-    //     }
-    // })
+    $(window).click((e)=>{
+        if (!clicked_e.currentTarget.contains(e.target)){
+            close_card(clicked_e)
+            console.log("close")
+        }
+    })
 
     function close_card(e){
         $(".close_card").css("display","none");

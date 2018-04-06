@@ -65,13 +65,14 @@ block content
                             else if post.progress === 'Complete'
                                 span.badge.badge-success.ml-1 Complete
                     strong
-                        | Posted on #{post.date_created.toDateString()} by 
-                        a(href='/profile?user_id=' + post.user_id) #{post.username}
-                        - var coordinatorUpvoteNum = 0
-                        each v, i in upvote
+                        | Posted on #{post.date_created.toDateString()}
+                        //-by 
+                        //-a(href='/profile?user_id=' + post.user_id) #{post.username}
+                        //- var coordinatorUpvoteNum = 0
+                        //-each v, i in upvote
                             if upvote[i].voted_user_id === post.user_id
                                 - coordinatorUpvoteNum++
-                        span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
+                        //-span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
                 .card-body
                     label.d-block(for='details') Details:
                     | #{post.detail}
@@ -88,7 +89,7 @@ block content
                                         .w-5
                                             img.rounded-circle.w-90(src=applicant[index].avatar_url)
                                         .w-75
-                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].first_name} #{applicant[index].last_name}
                                             if applicant[index].is_screened
                                                 span.badge.badge-success.ml-1 Screened
                                             else
@@ -97,11 +98,11 @@ block content
                                                 span.badge.badge-success.ml-1 Verified
                                             else
                                                 span.badge.badge-secondary.ml-1 Unverified
-                                            - var applicantUpvoteNum = 0
-                                            each v, i in upvote
+                                            //- var applicantUpvoteNum = 0
+                                            //-each v, i in upvote
                                                 if upvote[i].voted_user_id === applicant[index].user_id
                                                     - applicantUpvoteNum++
-                                            span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
+                                            //-span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
                                         .w-20.d-flex.justify-content-end
                                             if applicant[index].accepted === true && post.progress === 'Complete' && applicant[index].ti_upvoted === false
                                                 form.application-upvote.mr-1(method='POST', action='/application/upvote')
@@ -131,7 +132,7 @@ block content
                                         label(for='comment') Comment:
                                         |  #{applicant[index].comments}
             else if user.role === 'ti'
-                if applicant.length > 0
+                //--if applicant.length > 0
                     .card.mb-2
                         .card-body
                             h3 Applicants

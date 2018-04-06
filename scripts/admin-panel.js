@@ -445,7 +445,7 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res)
                 if(res.status=="success"){
-                    alert("Successfully delete "+res.row_updated+" posts")
+                    alert("Successfully archived "+res.row_updated+" posts")
                     for(i=0;i<selected_co_post.length;i++){
                         $(selected_co_post[i]).parents("tr").remove();
                     }

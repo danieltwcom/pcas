@@ -20,9 +20,11 @@ $(document).ready(function(){
     });
     
     $(window).click((e)=>{
-        if (!clicked_e.currentTarget.contains(e.target)){
-            close_card(clicked_e)
-            console.log("close")
+        if(clicked_e){
+            if (!clicked_e.currentTarget.contains(e.target)){
+                close_card(clicked_e)
+                console.log("close")
+            }
         }
     })
 

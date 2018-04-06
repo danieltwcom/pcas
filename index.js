@@ -1296,7 +1296,11 @@ app.post('/new-post', function(req, resp) {
             }
         });
     } else if (req.session.role === 'ti') {
-        var daysAvailable = req.body.days.join(', ');
+        if (typeof req.body.days === 'object') {
+            var daysAvailable = req.body.days.join(', ');
+        } else {
+            var daysAvailable = req.body.days;
+        }
 
         pool.query('INSERT INTO ti_postings (title, time_available, days_available, recurring, user_id, starting, details) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING post_id', [req.body.title, req.body.time, daysAvailable, req.body.recurring, req.session.user_id, req.body.starting, req.body.details], function(err, result) {
             if (err) {

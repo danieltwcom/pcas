@@ -77,11 +77,11 @@ block content
                     | #{post.detail}
             
             if user.role === 'coordinator'
-                .card
-                    .card-body
-                        h3 Applicants
-                        hr
-                        if applicant.length > 0
+                if applicant.length > 0
+                    .card
+                        .card-body
+                            h3 Applicants
+                            hr
                             each val, index in applicant
                                 .applicant.border-bottom.mb-2.pb-2
                                     .d-flex.justify-content-between.align-items-center.mx-auto
@@ -130,13 +130,10 @@ block content
                                     .applicant-comment
                                         label(for='comment') Comment:
                                         |  #{applicant[index].comments}
-                        else
-                            .alert.alert-warning.text-center
-                                h4 There are no applicants
             else if user.role === 'ti'
-                .card.mb-2
-                    .card-body
-                        if applicant.length > 0
+                if applicant.length > 0
+                    .card.mb-2
+                        .card-body
                             h3 Applicants
                             hr
                             each val, index in applicant

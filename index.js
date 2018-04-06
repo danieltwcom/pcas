@@ -1260,8 +1260,8 @@ app.get('/pleaseVerify',function(req,resp){
 
 // Create
 app.post('/new-post', function(req, resp) {
-    function getNoticeUser(mail_title,post_url){
-        pool.query("SELECT email FROM users WHERE email_notification = true",[]
+    function getNoticeUser(mail_title,post_url,role){
+        pool.query("SELECT email FROM users WHERE email_notification = true and user_id != $1 and role = $2",[req.session.user_id,role]
         ,function(err,result){
             if(err){
                 console.log(err);
@@ -1291,7 +1291,7 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                getNoticeUser("[New Post] " + req.body.title,req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=coordinator');
+                getNoticeUser("[New Post] " + req.body.title,req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=coordinator',req.session.role);
                 resp.send({status: 'success'});
             }
         });
@@ -1303,7 +1303,7 @@ app.post('/new-post', function(req, resp) {
                 console.log(err);
                 resp.send({status: 'fail'});
             } else if (result !== undefined && result.rowCount > 0) {
-                getNoticeUser("[New Post] "+req.body.title, req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=ti');
+                getNoticeUser("[New Post] "+req.body.title, req.get('host')+'/posting-details?post_id='+result.rows[0].post_id+'&role=ti',req.session.role);
                 resp.send({status: 'success'});
             }
         });

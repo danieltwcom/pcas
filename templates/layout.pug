@@ -1,4 +1,4 @@
-- function convertDate(date, with_time) { var year = date.getUTCFullYear(); var month = date.getUTCMonth() + 1; var day = date.getUTCDate(); if (month < 10) { month = '0' + month}; if (day < 10) { day = '0' + day}; var hour = date.getHours(); var minute = date.getMinutes(); var second = date.getSeconds(); if (with_time) { return year + '-' + month + '-' + day + ' @ ' + hour + ':' + minute + ':' + second; } else { return year + '-' + month + '-' + day; } }
+- function convertDate(date, with_time) { var year = date.getUTCFullYear(); var month = date.getUTCMonth() + 1; var day = date.getUTCDate(); if (month < 10) { month = '0' + month}; if (day < 10) { day = '0' + day}; var hour = date.getHours(); var minute = date.getMinutes(); var second = date.getSeconds(); if (second < 10) { second = '0' + second } if (with_time) { return year + '-' + month + '-' + day + ' @ ' + hour + ':' + minute + ':' + second; } else { return year + '-' + month + '-' + day; } }
 
 doctype html
 html

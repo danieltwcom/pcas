@@ -9,7 +9,8 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const randomstring = require('randomstring');
-const mailer = require('./js/mailer')
+const mailer = require('./js/mailer');
+const fs = require('fs');
 
 // ------------Server variables setup
 const port = process.env.PORT;
@@ -42,13 +43,126 @@ app.use(bodyParser.urlencoded({
 
 // multer storage configuration
 var storage = multer.diskStorage({
-    destination: 'users-file/',
+    destination: function(req, file, cb) {
+        let dir = 'users-file/' + req.session.user_id;
+        let profileDir = dir + '/profile-pic';
+
+        if (fs.existsSync(dir)) {
+            cb(null, profileDir);
+        } else {
+            return cb(new Error('DIR_NOT_EXIST'));
+        }
+    },
     filename: function(req, file, cb) {
-        cb(null, req.session.user_id + '-profile-pic.jpg')
+        let filename = randomstring.generate();
+        let extension = file.originalname.split('.').pop();
+        cb(null, filename + '.' + extension);
     }
 });
 
-var upload = multer({ storage: storage });
+var upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 2000000
+    },
+    fileFilter: function(req, file, cb) {
+        let extension = path.extname(file.originalname);
+        let extRegex = /\.(jpg|jpeg|png|gif)$/
+
+        if (extRegex.test(extension) === false) {
+            let error = new Error('Wrong file type');
+            error.code = 'INVALID_FILE_TYPE';
+            return cb(error);
+        } else {
+            let filesize = parseInt(req.headers['content-length']);
+            let dir = 'users-file/' + req.session.user_id;
+            let profileDir = dir + '/profile-pic';
+
+            if (filesize < 2000000) {
+                if (fs.existsSync(dir)) {
+                    if (fs.existsSync(profileDir)) {
+                        fs.readdir(profileDir, (err, files) => {
+                            if (err) { console.log(err); }
+        
+                            for (let file of files) {
+                                fs.unlinkSync(path.join(profileDir, file), err => {
+                                    if (err) { console.log(err); }
+                                });
+                            }
+                        });
+                    } else {
+                        fs.mkdir(profileDir);
+                    }
+                } else {
+                    fs.mkdir(dir);
+                    fs.mkdir(profileDir);
+                }
+            } else {
+                let error = new Error('File too big');
+                error.code = 'LIMIT_FILE_SIZE';
+                return cb(error);
+            }
+        }
+
+        cb(null, true);
+    }
+});
+
+var documentStorage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        let dir = 'users-file/' + req.session.user_id;
+        let documentDir = dir + '/documents';
+
+        if (fs.existsSync(dir)) {
+            cb(null, documentDir);
+        } else {
+            return cb(new Error('DIR_NOT_EXIST'));
+        }
+    },
+    filename: function(req, file, cb) {
+        let filename = randomstring.generate();
+        let extension = file.originalname.split('.').pop();
+        cb(null, filename + '.' + extension);
+    }
+});
+
+var documentUpload = multer({
+    storage: documentStorage,
+    limits: {
+        fileSize: 2000000
+    },
+    fileFilter: function(req, file, cb) {
+        let extension = path.extname(file.originalname);
+        let extRegex = /\.(jpg|jpeg|png|gif|pdf|doc)$/
+
+        if (extRegex.test(extension) === false) {
+            let error = new Error('Wrong file type');
+            error.code = 'INVALID_FILE_TYPE';
+            return cb(error);
+        } else {
+            let filesize = parseInt(req.headers['content-length']);
+            let dir = 'users-file/' + req.session.user_id;
+            let profileDir = dir + '/documents';
+
+            if (filesize < 2000000) {
+                if (fs.existsSync(dir)) {
+                    if (!fs.existsSync(profileDir)) {
+                        fs.mkdir(profileDir);
+                    }
+                } else {
+                    fs.mkdir(dir);
+                    fs.mkdir(profileDir);
+                }
+            } else {
+                let error = new Error('File too big');
+                error.code = 'LIMIT_FILE_SIZE';
+                return cb(error);
+            }
+        }
+
+        cb(null, true);
+    }
+});
 
 //-------------Sessions setup
 app.use(session({
@@ -83,29 +197,34 @@ app.post("/register", function(req, resp) {
 	console.log(req.body)
     var tocken = randomstring.generate()
     host=req.get('host');
-    
-    if (stringRegex.test(req.body.username) && stringRegex.test(req.body.fname)&& stringRegex.test(req.body.lname) && passwordRegex.test(req.body.pass) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.otherPhone) ){
+
+    if (req.body.agree) {
+        if (stringRegex.test(req.body.username) && stringRegex.test(req.body.fname)&& stringRegex.test(req.body.lname) && passwordRegex.test(req.body.pass) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.otherPhone) ){
             req.session.email=req.body.email
             var link="http://"+req.get('host')+"/verify?tc="+tocken+"&email="+req.body.email;
-        bcrypt.genSalt(saltRounds,function(err,salt){
-            bcrypt.hash(req.body.pass,salt,function(err,hash){
-                pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken],(err,res) => {
-                    console.log(err)
-                    if(err){
-                        resp.send({status:"fail",message:"Input invalid to database"})
-                    } 
-                    if(res != undefined && res.rowCount == 1){
-                        resp.send({status:"success"})
-                        
-                        mailer.emailVerify({reciver:req.body.email,link:link})
-                    }
+            bcrypt.genSalt(saltRounds,function(err,salt){
+                bcrypt.hash(req.body.pass,salt,function(err,hash){
+                    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken],(err,res) => {
+                        console.log(err)
+                        if(err){
+                            resp.send({status:"fail",message:"Input invalid to database"})
+                        } 
+                        if(res != undefined && res.rowCount == 1){
+                            resp.send({status:"success"})
+                            
+                            mailer.emailVerify({reciver:req.body.email,link:link})
+                        }
+                    });
                 });
             });
-        });
-        
+            
+        } else {
+            resp.send({status:'fail',message:"Input invalid"})
+        }
     } else {
-        resp.send({status:'fail',message:"Input invalid"})
+        resp.send({status: 'disagree'});
     }
+    
 });
 
 app.post("/duplicate_check",function(req,resp){
@@ -127,21 +246,29 @@ app.post("/login", function(req, resp) {
     if(stringRegex.test(req.body.username) && passwordRegex.test(req.body.password)){
     	pool.query('SELECT * FROM users WHERE username = $1 or email = $1',[req.body.username],(err,res) => {
     		if (res != undefined && res.rows.length > 0){
-                bcrypt.compare(req.body.password,res.rows[0].password,function(err,resc){
-                    if(resc){
-                        if(res.rows[0].is_verified == 1){
-                            req.session = res.rows[0];
-                            console.log(req.session);
-                            resp.redirect('/postings');
-                        } else {
-                            req.session.email=res.rows[0].email
-                            resp.render('blocks/login',{message:"Your account is not verified", verify:"Click here to verify your account "})
-                        }
+                pool.query('SELECT * FROM users WHERE user_id = $1 AND suspended = false', [res.rows[0].user_id], function(err, result) {
+                    if (err) { console.log(err); }
+
+                    if (result !== undefined && result.rows.length > 0) {
+                        bcrypt.compare(req.body.password,res.rows[0].password,function(err,resc){
+                            if(resc){
+                                if(res.rows[0].is_verified == 1){
+                                    pool.query('UPDATE users SET last_login = current_timestamp WHERE user_id = $1', [res.rows[0].user_id]);
+                                    req.session = res.rows[0];
+                                    console.log(req.session);
+                                    resp.redirect('/postings');
+                                } else {
+                                    req.session.email=res.rows[0].email
+                                    resp.render('blocks/login',{message:"Your account is not verified", verify:"Click here to verify your account "})
+                                }
+                            } else {
+                                resp.render('blocks/login',{message:"Wrong password"})
+                            }
+                        })
                     } else {
-                        resp.render('blocks/login',{message:"Wrong password"})
+                        resp.render('blocks/login', {message: 'Your account has been suspended'});
                     }
                 })
-    			
     		} else {
                 resp.render('blocks/login',{message:"Account does not exist"})
             }
@@ -326,15 +453,31 @@ app.get('/profile', function(req, resp) {
     var userId = req.query.user_id;
 
     if (req.session.username) {
+        var message = '';
+
+        if (req.query.error === 'invalid') {
+            var message = 'invalid';
+        } else if (req.query.error === 'big') {
+            var message = 'big';
+        }
+
         pool.query('SELECT * FROM users WHERE user_id = $1', [userId], function(err, result) {
             if (err) { console.log(err); }
 
             var profile = result.rows[0];
 
             if (result !== undefined && result.rows.length > 0) {
-                pool.query('SELECT * FROM upvotes', function(err, result) {
+                pool.query('SELECT * FROM documents WHERE owner_id = $1', [userId], function(err, result) {
                     if (err) { console.log(err); }
-                    resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows});
+
+                    if (result !== undefined) {
+                        var documents = result.rows;
+                    }
+
+                    pool.query('SELECT * FROM upvotes', function(err, result) {
+                        if (err) { console.log(err); }
+                        resp.render('blocks/profile', {user: req.session, viewing: profile, upvotes: result.rows, documents: documents, message: message});
+                    });
                 });
             }
         });
@@ -343,9 +486,45 @@ app.get('/profile', function(req, resp) {
     }
 });
 
+app.get('/faq', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/faq', {user: req.session});
+    } else {
+        resp.render('blocks/faq');
+    }
+});
+
+app.get('/tos', function(req, resp) {
+    if (req.session.username) {
+        resp.render('blocks/tos', {user: req.session});
+    } else {
+        resp.render('blocks/tos');
+    } 
+});
+
+app.get('/documents/:userid/:filename', function(req, resp) {
+    if (req.session.username) {
+        resp.sendFile(__dirname + '/users-file/' + req.params.userid + '/documents/' + req.params.filename);
+    }
+});
+
 app.get('/edit-profile', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/edit-profile', {user: req.session});
+        var message = '';
+
+        if (req.query.error === 'invalid') {
+            var message = 'invalid';
+        } else if (req.query.error === 'big') {
+            var message = 'big';
+        }
+
+        pool.query('SELECT * FROM documents WHERE owner_id = $1', [req.session.user_id], function(err, result) {
+            if (err) { console.log(err); }
+
+            if (result !== undefined) {
+                resp.render('blocks/edit-profile', {user: req.session, documents: result.rows, message: message});
+            }
+        });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -469,32 +648,66 @@ app.get('/register', function(req, resp) {
 
 app.get('/forgetPass',function(req,resp){
     resp.render('blocks/forget-pass')
-})
+});
 
-app.get('/messages', function(req, resp) {
+app.get('/inbox', function(req, resp) {
     if (req.session.username) {
-        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+        pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
             if (err) { console.log(err); }
 
-            var outbox = result.rows;
-
-            pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
-                if (err) { console.log(err); }
-
-                var inbox = result.rows;
-
-                resp.render('blocks/messages', {user: req.session, outbox: outbox, inbox: inbox});
-            });
+            if (result !== undefined) {
+                resp.render('blocks/inbox', {user: req.session, inbox: result.rows});
+            }
         });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
 });
 
-
-/* app.get('/compose', function(req, resp) {
+app.get('/outbox', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/compose', {user: req.session});
+        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            resp.render('blocks/outbox', {user: req.session, outbox: result.rows});
+        });
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+});
+
+app.post('/get-message-count', function(req, resp) {
+    if (req.session.username) {
+        pool.query('SELECT COUNT(*) as message_count FROM messages WHERE recipient = $1 AND is_read = false', [req.body.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            resp.send({message_count: result.rows[0].message_count});
+        });
+    }
+});
+
+
+app.get('/compose', function(req, resp) {
+    if (req.session.username) {
+        var recipient = '';
+
+        if (req.query.recipient) {
+            var recipient = req.query.recipient;
+        }
+
+        if (req.query.id) {
+            pool.query('SELECT * FROM messages WHERE message_id = $1 AND sender = $2 AND recipient = $3', [req.query.id, recipient, req.session.username], function(err, result) {
+                if (err) { console.log(err); }
+
+                if (result !== undefined && result.rows.length > 0) {
+                    resp.render('blocks/compose', {user: req.session, recipient: recipient, message: result.rows[0]});
+                } else if (result !== undefined && result.rows.length === 0) {
+                    resp.render('blocks/404', {user: req.session});
+                }
+            })
+        } else {
+            resp.render('blocks/compose', {user: req.session, recipient: recipient});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -502,7 +715,21 @@ app.get('/messages', function(req, resp) {
 
 app.get('/message-details', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/message-details', {user: req.session});
+        console.log(req.query.id);
+        pool.query('UPDATE messages SET is_read = true WHERE message_id = $1 AND (sender = $2 OR recipient = $3)', [req.query.id, req.session.username, req.session.username], function(err, result) {
+            if (err) { console.log(err); }
+
+            pool.query('SELECT * FROM messages WHERE message_id = $1 AND (sender = $2 OR recipient = $3) ORDER BY date_created DESC', [req.query.id, req.session.username, req.session.username], function(err, result) {
+                if (err) {
+                    console.log(err);
+                } else if (result !== undefined && result.rows.length > 0) {
+                    console.log(result.rows);
+                    resp.render('blocks/message-details', {user: req.session, message: result.rows[0]});
+                } else if (result !== undefined && result.rows.length === 0) {
+                    resp.render('blocks/404', {user: req.session});
+                }
+            });
+        });
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -510,7 +737,7 @@ app.get('/message-details', function(req, resp) {
 
 app.get('/sent', function(req, resp) {
     if (req.session.username) {
-        resp.render('blocks/message-sent', {message: 'Message has been sent'});
+        resp.render('blocks/message-action', {user: req.session, message: 'Message has been sent'});
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -527,7 +754,7 @@ app.post('/send-message', function(req, resp) {
             }
         });
     }
-}); */
+});
 
 app.get('/create-post', function(req, resp) {
     console.log(req.session);
@@ -586,31 +813,76 @@ app.post('/upload-profile-pic', function(req, resp) {
     let uploadProfilePic = upload.single('profile_pic');
 
     uploadProfilePic(req, resp, function(err) {
-        console.log(req.file);
-        console.log(req.body);
-        if (err) { console.log(err); }
-        
-        if (req.file.size > 2000000) {
-            resp.send({status: 'filesize too big'});
+        if (err) {
+            console.log(err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=big');
+            } else if (err.code = 'INVALID_FILE_TYPE') {
+                console.log(err.code);
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=invalid');
+            }
         }
 
-        if (req.file.mimetype === 'image/png' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/pdf') {
-            let avatarURL = req.session.user_id + '-profile-pic.jpg';
-
-            pool.query('UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING avatar_url', [avatarURL, req.session.user_id], function(err, result) {
-                if (err) { console.log(err); }
-                
-                req.session.avatar_url = result.rows[0].avatar_url;
-                resp.redirect('/profile?user_id=' + req.session.user_id);
-            })
-        } else {
-            resp.send({status: 'invalid file type'});
+        if (req.file !== undefined) {
+            if (req.file.mimetype === 'image/png' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg') {
+                let avatarUrl = '/files/' + req.session.user_id + '/profile-pic/' + req.file.filename;
+    
+                pool.query('UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING avatar_url', [avatarUrl, req.session.user_id], function(err, result) {
+                    if (err) { console.log(err); }
+                    
+                    req.session.avatar_url = result.rows[0].avatar_url;
+                    resp.redirect('/profile?user_id=' + req.session.user_id);
+                })
+            } else {
+                resp.redirect('/profile?user_id=' + req.session.user_id + '&error=invalid');
+            }
         }
     });
 });
 
-app.post('/upload-credential', upload.single('credential'), function(req, resp) {
-    console.log(req.file);
+app.post('/upload-document', function(req, resp) {
+    let uploadDocument = documentUpload.single('document');
+
+    uploadDocument(req, resp, function(err) {
+        if (err) {
+            console.log(err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                resp.redirect('/edit-profile?error=big#documents');
+            } else if (err.code === 'INVALID_FILE_TYPE') {
+                resp.redirect('/edit-profile?error=invalid#documents');
+            }
+        }
+
+        if (req.file !== undefined) {
+            if (req.file.mimetype === 'application/pdf' || req.file.mimetype === 'image/gif' || req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/jpg' || req.file.mimetype === 'application/msword' || req.file.mimetype === 'image/png') {
+                let documentUrl = '/files/' + req.session.user_id + '/documents/' + req.file.filename;
+
+                pool.query('INSERT INTO documents (url, owner_id, title) VALUES ($1, $2, $3)', [documentUrl, req.session.user_id, req.body.title], function(err, result) {
+                    if (err) { console.log(err); }
+                    
+                    if (result !== undefined && result.rowCount > 0) {
+                        resp.redirect('/edit-profile#documents');
+                    }
+                });
+            }
+        }
+    });
+});
+
+app.post('/delete-document', function(req, resp) {
+    if (req.session.username) {
+        pool.query('DELETE FROM documents WHERE id = $1 RETURNING *', [req.body.id], function(err, result) {
+            if (err) {
+                resp.send({status: 'fail'});
+            } else if (result !== undefined && result.rowCount > 0) {
+                let filePathSplit = result.rows[0].url.split('/');
+                let file = '/users-file/' + filePathSplit[2] + '/' + filePathSplit[3] + '/' + filePathSplit[4];
+                fs.unlink(__dirname + file, function(err) {
+                    resp.send({status: 'successs', id: result.rows[0].id});
+                });
+            }
+        });
+    }
 });
 
 app.post('/apply-options', function(req, resp) {
@@ -1049,7 +1321,7 @@ app.get('/post-created', function(req, resp) {
 // ------------- Admin Panel --------------
 app.get("/admin-panel",function(req,res){
     if(req.session.role === 'admin'){
-        res.render("blocks/admin-panel", {user: req.session});
+        res.render("blocks/admin-panel");
     }else{
         res.render("blocks/login", {message:"Please login as admin"});
     }
@@ -1339,6 +1611,38 @@ function set_post_progress(req,res){
         }
     })
 }
+
+app.post('/get-user-post-info', function(req, resp) {
+    if (req.session.username) {
+        if (req.session.role === 'coordinator') {
+            pool.query('SELECT COUNT(*) AS total_posts FROM coord_postings WHERE user_id = $1', [req.body.user_id], function(err, result) {
+                if (err) { console.log(err); }
+
+                if (result !== undefined) {
+                    resp.send({status: 'success', total_posts: result.rows[0].total_posts, total_app: 0});
+                }
+            });
+        } else if (req.session.role === 'ti') {
+            pool.query('SELECT COUNT(*) AS total_posts FROM ti_postings WHERE user_id = $1', [req.body.user_id], function(err, result) {
+                if (err) { console.log(err); }
+
+                var total_posts = result.rows[0].total_posts;
+                
+                pool.query('SELECT COUNT(*) AS total_app FROM applicants WHERE applicant_id = $1', [req.body.user_id], function(err, result) {
+                    if (err) { console.log(err); }
+
+                    var total_app = result.rows[0].total_app;
+
+                    if (result !== undefined) {
+                        resp.send({status: 'success', total_posts: total_posts, total_app: total_app});
+                    }
+                })
+            })
+        }
+    } else {
+        resp.render('blocks/login', {message: "You're not logged in"});
+    }
+})
 
 // ----- get data -------
 app.post('/data',function(req,res){

@@ -49,6 +49,11 @@ block content
                 .form-group.w-100
                     label(for='description') Description:
                     textarea.form-control.w-100(name='description', rows='10', placeholder='Education, work experience, skills, etc.')
+                .form-inline.w-100
+                    input.mr-1(type='checkbox', name='agree')
+                    | Yes, I have read and agree with the 
+                    a(href='/tos') Terms and Services
+                    | .
                 .text-right.w-100
                     input#Submit.btn.btn-primary.mr-1(type='submit', value='Register')
                     input.btn.btn-secondary(type='reset', value='Clear')

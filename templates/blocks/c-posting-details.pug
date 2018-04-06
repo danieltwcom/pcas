@@ -86,7 +86,7 @@ block content
                                 .applicant.border-bottom.mb-2.pb-2
                                     .d-flex.justify-content-between.align-items-center.mx-auto
                                         .w-5
-                                            img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
                                         .w-75
                                             a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
                                             if applicant[index].is_screened
@@ -109,8 +109,11 @@ block content
                                                     input(type='hidden', name='voter_id', value=applicant[index].user_id)
                                                     input(type='hidden', name='voted_user_id', value=applicant[index].applicant_id)
                                                     input.btn.btn-info.btn-sm(type='submit', value='Upvote User')
-                                            a(href='mailto:' + applicant[index].email)
-                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Email
+                                            a(href='/compose?recipient=' + applicant[index].username)
+                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Message
+                                            if applicant[index].hide_email === false
+                                                a(href='mailto:' + applicant[index].email)
+                                                    button.btn.btn-primary.btn-sm.mr-1(type='button') Email
                                             if applicant[index].accepted === false
                                                 form.accept-applicant(method='POST', action='/accept-applicant')
                                                     input(type='hidden', name='application_id', value=applicant[index].application_id)
@@ -131,33 +134,36 @@ block content
                             .alert.alert-warning.text-center
                                 h4 There are no applicants
             else if user.role === 'ti'
+                .card.mb-2
+                    .card-body
+                        if applicant.length > 0
+                            h3 Applicants
+                            hr
+                            each val, index in applicant
+                                .applicant.border-bottom.mb-2.pb-2
+                                    .d-flex.justify-content-between.align-items-center.mx-auto
+                                        .w-5
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
+                                        .w-95
+                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                            if applicant[index].is_screened
+                                                span.badge.badge-success.ml-1 Screened
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unscreened
+                                            if applicant[index].verified
+                                                span.badge.badge-success.ml-1 Verified
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unverified
+                                            - var applicantUpvoteNum = 0
+                                            each v, i in upvote
+                                                if upvote[i].voted_user_id === applicant[index].user_id
+                                                    - applicantUpvoteNum++
+                                            span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
+                                    .applicant-comment
+                                        label(for='comment') Comment:
+                                        |  #{applicant[index].comments}
                 .card
                     .card-body
-                        h3 Apply
-                        hr
-                        each val, index in applicant
-                            .applicant.border-bottom.mb-2.pb-2
-                                .d-flex.justify-content-between.align-items-center.mx-auto
-                                    .w-5
-                                        img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
-                                    .w-95
-                                        a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
-                                        if applicant[index].is_screened
-                                            span.badge.badge-success.ml-1 Screened
-                                        else
-                                            span.badge.badge-secondary.ml-1 Unscreened
-                                        if applicant[index].verified
-                                            span.badge.badge-success.ml-1 Verified
-                                        else
-                                            span.badge.badge-secondary.ml-1 Unverified
-                                        - var applicantUpvoteNum = 0
-                                        each v, i in upvote
-                                            if upvote[i].voted_user_id === applicant[index].user_id
-                                                - applicantUpvoteNum++
-                                        span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
-                                .applicant-comment
-                                    label(for='comment') Comment:
-                                    |  #{applicant[index].comments}
                         - var applied = false
                         each val, index in applicant
                             if applicant[index].user_id === user.user_id
@@ -167,6 +173,7 @@ block content
                                 .alert.alert-info.text-center
                                     h4 The number of applicants have been fulfilled
                             else
+                                h3 Apply
                                 form(action='/apply', method='post')
                                     input(type='hidden', name='post_id', value=post.post_id)
                                     input(type='hidden', name='user_id', value=user.user_id)

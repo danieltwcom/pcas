@@ -1261,7 +1261,13 @@ app.get('/pleaseVerify',function(req,resp){
 // Create
 app.post('/new-post', function(req, resp) {
     function getNoticeUser(mail_title,post_url,role){
-        pool.query("SELECT email FROM users WHERE email_notification = true and user_id != $1 and role = $2",[req.session.user_id,role]
+        let email_role;
+        if(role === 'coordinator'){
+            email_role = 'ti'
+        }else if (role === 'ti'){
+            email_role = 'coordinator'
+        }
+        pool.query("SELECT email FROM users WHERE email_notification = true and user_id != $1 and role = $2",[req.session.user_id,email_role]
         ,function(err,result){
             if(err){
                 console.log(err);

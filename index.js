@@ -1517,7 +1517,7 @@ app.post("/manage-post",function(req,res){
     // search post from coordinator postings
     if(req.body.type=="get-co"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2 ORDER BY post_id"
+        pool.query("SELECT *,TO_CHAR(date_created, 'YYYY-MM-DD') as date_created FROM coord_postings WHERE (LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2) AND is_archived=false ORDER BY post_id"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){
@@ -1533,7 +1533,7 @@ app.post("/manage-post",function(req,res){
     // search post from interpreter postings
     if(req.body.type=="get-ti"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id ORDER BY ti_postings.post_id"
+        pool.query("SELECT *,TO_CHAR(ti_postings.date_created, 'YYYY-MM-DD') as date_created,TO_CHAR(ti_postings.starting, 'YYYY-MM-DD') as starting FROM users,ti_postings WHERE (LOWER(title) LIKE LOWER($1) OR CAST(post_id as varchar) = $2) AND users.user_id = ti_postings.user_id AND is_archived=false ORDER BY ti_postings.post_id"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){
@@ -1571,21 +1571,22 @@ app.post("/manage-post",function(req,res){
             }
         }
         for(i=0; i<ti_post_array.length;i++){
-            if(i==co_post_array.length-1){
+            if(i==ti_post_array.length-1){
                 ti_post_arr_sql+=ti_post_array[i]+")"
             }else{
                 ti_post_arr_sql+=ti_post_array[i]+","
             }
         }
         console.log(ti_post_arr_sql,co_post_arr_sql);
-        pool.query("DELETE FROM coord_postings WHERE post_id IN "+co_post_arr_sql
+        pool.query("UPDATE coord_postings SET is_archived=true WHERE post_id IN "+co_post_arr_sql
         ,[]
         ,function(err,result){
             if(err){
                 console.log(err);
                 res.send({status:"fail"});
             }else{
-                pool.query("DELETE FROM ti_postings WHERE post_id IN "+ti_post_arr_sql
+                console.log(ti_post_arr_sql)
+                pool.query("UPDATE ti_postings SET is_archived=true WHERE post_id IN "+ti_post_arr_sql
                 ,[]
                 ,function(err,result){
                     if(err){

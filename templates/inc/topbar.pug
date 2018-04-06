@@ -9,7 +9,10 @@ nav.navbar.navbar-light.bg-light.mb-3
         .d-flex.justify-content-end.w-15
             #profile-pic-div-mini.mr-2(style='background: url("' + user.avatar_url + '") no-repeat; background-size: cover')
             div
-                div
-                    a(href='/profile?user_id=' + user.user_id) #{user.username}
-                a(href='/inbox')
-                    button.btn.btn-sm.btn-primary#message-notification(type='button') Messages
+                .mb-2.pb-2.border-bottom
+                    a(href='/profile?user_id=' + user.user_id) #{user.first_name} #{user.last_name}
+                    //-span.badge.badge-primary.ml-1#user-panel-upvotes
+                .d-flex.align-items-center
+                    a(href='/inbox')
+                        i.fa.fa-envelope(aria-hidden='true')
+                    span.badge.badge-success.ml-1#message-notification

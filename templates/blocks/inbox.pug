@@ -26,12 +26,12 @@ block content
                             tr.font-weight-bold
                                 td
                                     a(href='/message-details?id=' + inbox[i].message_id) #{inbox[i].subject}
-                                    span.badge.badge-primary.ml-1 New
+                                    span.badge.badge-success.ml-1 New
                                 td #{inbox[i].sender}
                                 td #{convertDate(inbox[i].date_created, true)}1
                         else
                             tr
                                 td
                                     a(href='/message-details?id=' + inbox[i].message_id) #{inbox[i].subject}
-                                td #{inbox[i].sender}
+                                td #{inbox[i].first_name} #{inbox[i].last_name}
                                 td #{convertDate(inbox[i].date_created, true)}

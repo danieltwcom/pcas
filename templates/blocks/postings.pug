@@ -56,20 +56,20 @@ block content
             .card
                 .card-body.bg-light
                     .d-flex.justify-content-between.mb-2
-                        .w-35
-                            strong Title
+                        .w-50
+                            strong Posted By
                         .w-35
                             strong Available
                         .w-15
                             strong Starting
-                        .w-15
+                        //-.w-15
                             strong Posted By
                     #work-postings
                         each val, index in ti_postings
                             - var daysArray = ti_postings[index].days_available.split(', ')
                             .d-flex.justify-content-between.mb-2
-                                .w-35
-                                    a(href='/posting-details?post_id=' + ti_postings[index].post_id + '&role=' + ti_postings[index].role) [##{ti_postings[index].post_id}] #{ti_postings[index].title}
+                                .w-50
+                                    a(href='/posting-details?post_id=' + ti_postings[index].post_id + '&role=' + ti_postings[index].role) [##{ti_postings[index].post_id}] #{ti_postings[index].first_name} #{ti_postings[index].last_name}
                                 .w-35
                                     - var mon = daysArray.indexOf('Mon')
                                     - var tue = daysArray.indexOf('Tue')
@@ -93,5 +93,5 @@ block content
                                     if sun !== -1
                                         span.badge.badge-primary.mr-1 Sunday
                                 .w-15 #{ti_postings[index].starting.toDateString()}
-                                .w-15
+                                //-.w-15
                                     a(href='/profile?user_id=' + ti_postings[index].user_id) #{ti_postings[index].username}

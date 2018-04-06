@@ -25,5 +25,5 @@ block content
                         tr
                             td
                                 a(href='/message-details?id=' + outbox[i].message_id) #{outbox[i].subject}
-                            td #{outbox[i].recipient}
+                            td #{outbox[i].first_name} #{outbox[i].last_name}
                             td #{outbox[i].date_created.toDateString()}

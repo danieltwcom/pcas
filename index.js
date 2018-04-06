@@ -204,7 +204,7 @@ app.post("/register", function(req, resp) {
             var link="http://"+req.get('host')+"/verify?tc="+tocken+"&email="+req.body.email;
             bcrypt.genSalt(saltRounds,function(err,salt){
                 bcrypt.hash(req.body.pass,salt,function(err,hash){
-                    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken],(err,res) => {
+                    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken,location) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken,req.body.school],(err,res) => {
                         console.log(err)
                         if(err){
                             resp.send({status:"fail",message:"Input invalid to database"})
@@ -539,7 +539,7 @@ app.get('/postings', function(req, resp) {
                 var coord_postings = result.rows;
             }
 
-            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false AND is_archived = false ORDER BY ti_postings.date_created ASC', function(err, result) {
+            pool.query('SELECT * FROM ti_postings JOIN users ON ti_postings.user_id = users.user_id WHERE is_hidden = false AND is_archived = false ORDER BY ti_postings.date_created DESC', function(err, result) {
                 if (err) { console.log(err); }
 
                 if (result !== undefined) {
@@ -556,14 +556,18 @@ app.get('/postings', function(req, resp) {
 
 app.get('/my-applications', function(req, resp) {
     if (req.session.username) {
-        pool.query('SELECT * FROM applicants JOIN coord_postings ON applicants.post_id = coord_postings.post_id JOIN users ON users.user_id = coord_postings.user_id WHERE applicants.applicant_id = $1 ORDER BY applicants.post_id', [req.session.user_id], function(err, result) {
-            if (err) {
-                console.log(err);
-                resp.send({status: 'fail'});
-            } else if (result !== undefined) {
-                resp.render('blocks/my-applications', {user: req.session, applications: result.rows});
-            }
-        });
+        if (req.session.role !== 'admin') {
+            pool.query('SELECT * FROM applicants JOIN coord_postings ON applicants.post_id = coord_postings.post_id JOIN users ON users.user_id = coord_postings.user_id WHERE applicants.applicant_id = $1 ORDER BY applicants.post_id', [req.session.user_id], function(err, result) {
+                if (err) {
+                    console.log(err);
+                    resp.send({status: 'fail'});
+                } else if (result !== undefined) {
+                    resp.render('blocks/my-applications', {user: req.session, applications: result.rows});
+                }
+            });
+        } else {
+            resp.render('blocks/404', {user: req.session, message: '404'});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -571,19 +575,23 @@ app.get('/my-applications', function(req, resp) {
 
 app.get('/my-posts', function(req, resp) {
     if (req.session.username) {
-        if (req.session.role === 'coordinator') {
-            var queryString = 'SELECT * FROM coord_postings WHERE user_id = $1 ORDER BY date_created';
-        } else if (req.session.role === 'ti') {
-            var queryString = 'SELECT * FROM ti_postings WHERE user_id = $1 ORDER BY date_created';
-        }
-
-        pool.query(queryString, [req.session.user_id], function(err, result) {
-            if (err) { console.log(err); }
-
-            if (result !== undefined) {
-                resp.render('blocks/my-posts', {user: req.session, posts: result.rows})
+        if (req.session.role !== 'admin') {
+            if (req.session.role === 'coordinator') {
+                var queryString = 'SELECT * FROM coord_postings WHERE user_id = $1 ORDER BY date_created';
+            } else if (req.session.role === 'ti') {
+                var queryString = 'SELECT * FROM ti_postings WHERE user_id = $1 ORDER BY date_created';
             }
-        });
+    
+            pool.query(queryString, [req.session.user_id], function(err, result) {
+                if (err) { console.log(err); }
+    
+                if (result !== undefined) {
+                    resp.render('blocks/my-posts', {user: req.session, posts: result.rows})
+                }
+            });
+        } else {
+            resp.render('blocks/404', {user: req.session, message: '404'});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -652,7 +660,7 @@ app.get('/forgetPass',function(req,resp){
 
 app.get('/inbox', function(req, resp) {
     if (req.session.username) {
-        pool.query('SELECT * FROM messages WHERE recipient = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+        pool.query('SELECT * FROM messages JOIN users ON messages.sender = users.username WHERE recipient = $1 ORDER BY messages.date_created DESC', [req.session.username], function(err, result) {
             if (err) { console.log(err); }
 
             if (result !== undefined) {
@@ -666,7 +674,7 @@ app.get('/inbox', function(req, resp) {
 
 app.get('/outbox', function(req, resp) {
     if (req.session.username) {
-        pool.query('SELECT * FROM messages WHERE sender = $1 ORDER BY date_created DESC', [req.session.username], function(err, result) {
+        pool.query('SELECT * FROM messages JOIN users ON messages.recipient = users.username WHERE sender = $1 ORDER BY messages.date_created DESC', [req.session.username], function(err, result) {
             if (err) { console.log(err); }
 
             resp.render('blocks/outbox', {user: req.session, outbox: result.rows});
@@ -681,11 +689,24 @@ app.post('/get-message-count', function(req, resp) {
         pool.query('SELECT COUNT(*) as message_count FROM messages WHERE recipient = $1 AND is_read = false', [req.body.username], function(err, result) {
             if (err) { console.log(err); }
 
-            resp.send({message_count: result.rows[0].message_count});
+            if (result !== undefined) {
+                resp.send({message_count: result.rows[0].message_count});
+            }
         });
     }
 });
 
+app.post('/get-upvotes', function(req, resp) {
+    if (req.session.username) {
+        pool.query('SELECT COUNT(*) AS upvotes FROM upvotes WHERE voted_user_id = $1', [req.session.user_id], function(err, result) {
+            if (err) { console.log(err); }
+
+            if (result !== undefined) {
+                resp.send({upvotes: result.rows[0].upvotes});
+            }
+        });
+    }
+});
 
 app.get('/compose', function(req, resp) {
     if (req.session.username) {
@@ -702,7 +723,7 @@ app.get('/compose', function(req, resp) {
                 if (result !== undefined && result.rows.length > 0) {
                     resp.render('blocks/compose', {user: req.session, recipient: recipient, message: result.rows[0]});
                 } else if (result !== undefined && result.rows.length === 0) {
-                    resp.render('blocks/404', {user: req.session});
+                    resp.render('blocks/404', {user: req.session, message: '404'});
                 }
             })
         } else {
@@ -726,7 +747,7 @@ app.get('/message-details', function(req, resp) {
                     console.log(result.rows);
                     resp.render('blocks/message-details', {user: req.session, message: result.rows[0]});
                 } else if (result !== undefined && result.rows.length === 0) {
-                    resp.render('blocks/404', {user: req.session});
+                    resp.render('blocks/404', {user: req.session, message: '404'});
                 }
             });
         });
@@ -759,7 +780,11 @@ app.post('/send-message', function(req, resp) {
 app.get('/create-post', function(req, resp) {
     console.log(req.session);
     if (req.session.username) {
-        resp.render('blocks/create-post', {user: req.session});
+        if (req.session.role !== 'admin') {
+            resp.render('blocks/create-post', {user: req.session});
+        } else {
+            resp.render('blocks/404', {user: req.session, message: '404'});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -767,19 +792,23 @@ app.get('/create-post', function(req, resp) {
 
 app.get('/edit-post', function(req, resp) {
     if (req.session.username) {
-        if (req.session.role === 'coordinator') {
-            var queryString = 'SELECT * FROM coord_postings WHERE post_id = $1';
-        } else if (req.session.role === 'ti') {
-            var queryString = 'SELECT * FROM ti_postings WHERE post_id = $1';
-        }
-
-        pool.query(queryString, [req.query.post_id], function(err, result) {
-            if (err) { console.log(err); }
-
-            if (result !== undefined) {
-                resp.render('blocks/edit-post', {user: req.session, post: result.rows[0]});
+        if (req.session.role !== 'admin') {
+            if (req.session.role === 'coordinator') {
+                var queryString = 'SELECT * FROM coord_postings WHERE post_id = $1';
+            } else if (req.session.role === 'ti') {
+                var queryString = 'SELECT * FROM ti_postings WHERE post_id = $1';
             }
-        })
+    
+            pool.query(queryString, [req.query.post_id], function(err, result) {
+                if (err) { console.log(err); }
+    
+                if (result !== undefined) {
+                    resp.render('blocks/edit-post', {user: req.session, post: result.rows[0]});
+                }
+            });
+        } else {
+            resp.render('blocks/404', {user: req.session, message: '404'});
+        }
     } else {
         resp.render('blocks/login', {message: "You're not logged in"});
     }
@@ -992,7 +1021,7 @@ app.post('/accept-applicant', function(req, resp) {
                                 console.log(result.rows);
                                 if (result !== undefined && parseInt(result.rows[0].accepted) === neededApplicants) {
                                     console.log('true');
-                                    pool.query("UPDATE coord_postings SET progress = 'In Progress' WHERE post_id = $1", [req.body.post_id], function(err, result) {
+                                    pool.query("UPDATE coord_postings SET progress = 'Fulfilled' WHERE post_id = $1", [req.body.post_id], function(err, result) {
                                         if (err) { console.log(err); }
 
                                         console.log(result);
@@ -1317,6 +1346,8 @@ app.post('/new-post', function(req, resp) {
                 resp.send({status: 'success'});
             }
         });
+    } else if (req.session.role === 'admin') {
+        render('blocks/404', {user: req.session, message: 'no'});
     }
 });
 

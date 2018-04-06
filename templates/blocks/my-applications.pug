@@ -22,9 +22,9 @@ block content
                     .w-50
                         a(href='/posting-details?post_id=' + applications[index].post_id + '&role=coordinator') [##{applications[index].post_id}] #{applications[index].title}
                     .w-25.text-center
-                        a(href='/profile?user_id=' + applications[index].user_id) #{applications[index].username}
+                        a(href='/profile?user_id=' + applications[index].user_id) #{applications[index].first_name} #{applications[index].last_name}
                     if applications[index].accepted === true
-                        if applications[index].is_complete === true
+                        //if applications[index].is_complete === true
                             form.form-inline.w-25.application-upvote(action='/application/upvote', method='POST')
                                 .w-50.text-center
                                     span.badge.badge-success.application-status Complete
@@ -34,20 +34,21 @@ block content
                                         input(type='hidden', name='voted_user_id', value=applications[index].user_id)
                                         input(type='hidden', name='voter_id', value=applications[index].applicant_id)
                                         input.btn.btn-sm.btn-info(type='submit', value='Upvote User')
-                        else
+
+                        .w-25
+                            .w-50.text-center
+                                span.badge.badge-success Accepted
+                            .w-50
+                    else
+                        if applications[index].progress === 'Open'
+                            form.form-inline.w-25.application-withdraw(action='/application/withdraw', method='POST')
+                                .w-50.text-center
+                                    span.badge.badge-warning.application-status Waiting
+                                .w-50.text-center
+                                    input(type='hidden', name='id', value=applications[index].application_id)
+                                    input.btn.btn-sm.btn-danger(type='submit', value='Withdraw')
+                        else if applications[index].progress === 'Fulfilled'
                             .w-25
                                 .w-50.text-center
-                                    if applications[index].progress === 'Open'
-                                        span.badge.badge-primary Open
-                                    else if applications[index].progress === 'Fulfilled'
-                                        span.badge.badge-info Fulfilled
-                                    else if applications[index].progress === 'In Progress'
-                                        span.badge.badge-warning In Progress
+                                    span.badge.badge-info Fulfilled
                                 .w-50
-                    else
-                        form.form-inline.w-25.application-withdraw(action='/application/withdraw', method='POST')
-                            .w-50.text-center
-                                span.badge.badge-warning.application-status Waiting
-                            .w-50.text-center
-                                input(type='hidden', name='id', value=applications[index].application_id)
-                                input.btn.btn-sm.btn-danger(type='submit', value='Withdraw')

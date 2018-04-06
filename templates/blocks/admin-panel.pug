@@ -47,6 +47,7 @@ block content
                         a#screen_btn.dropdown-item(href="#") Screen
                         a#promote_btn.dropdown-item(href="#") Promote Admin
                         a#delete_btn.dropdown-item(href="#") Suspend
+                        a#undo_delete_btn.dropdown-item(href="#") Unsuspend
             
             //- found user table
             table#user_table.table.table-light.table-hover.mt-2
@@ -87,7 +88,7 @@ block content
                         a#complete_post_btn.dropdown-item(href="#") Complete
                         label.ml-3 Manage Post
                         a#modify_post_btn.dropdown-item(href="#") Modify
-                        a#delete_post_btn.dropdown-item(href="#") Suspend
+                        a#delete_post_btn.dropdown-item(href="#") Delete
             
             //- table tabs
             ul#myTab.nav.nav-tabs.mt-2(role='tablist')
@@ -124,7 +125,7 @@ block content
                         tbody#ti_post_table_body.table-body
 
         #manage-statistic.content.container
-            .card-deck
+            .card-deck.justify-content-center
                 .card.border-info.mb-3(style='max-width: 18rem;')
                     .card-header.text-center.bg-info
                         h5 Posts

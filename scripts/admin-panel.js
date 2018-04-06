@@ -120,15 +120,32 @@ $(document).ready(function(){
                         last_name.innerHTML = res[i].last_name;
                         tr.appendChild(last_name);
 
+                        let var_role;
+                        if(res[i].sub_role=='ti'){
+                            var_role = 'Interpreter/Transcriber'
+                        }else if(res[i].sub_role=='i'){
+                            var_role = 'Interpreter'
+                        }else if(res[i].sub_role=='t'){
+                            var_role = 'Transcriber'
+                        }else if(res[i].sub_role=='c'){
+                            var_role = 'Coordinator'
+                        }else if(res[i].sub_role=='a'){
+                            var_role = 'Admin'
+                        }
                         let role = document.createElement("td");
-                        role.innerHTML = res[i].role;
+                        role.innerHTML = var_role;
                         role.id = "role"
                         tr.appendChild(role);
 
                         let is_verified = document.createElement("td");
                         is_verified.innerHTML = res[i].is_verified;
-                        is_verified.id = "verified";
+                        is_verified.id = "activate";
                         tr.appendChild(is_verified);
+
+                        let verified = document.createElement("td");
+                        verified.innerHTML = res[i].verified;
+                        verified.id = "verified";
+                        tr.appendChild(verified);
 
                         let is_screened = document.createElement("td");
                         is_screened.innerHTML = res[i].is_screened;
@@ -147,7 +164,7 @@ $(document).ready(function(){
         })
     })
 
-    // --- verified user ---
+    // --- active account ---
     $("#verify_btn").click(function(){
         let selected_user = $("#selected_user:checked");
         let update_user_array = [];
@@ -161,6 +178,35 @@ $(document).ready(function(){
             type:"post",
             data:{
                 type:"verify",
+                user_array: update_user_array,
+            },
+            success:function(res){
+                console.log(res)
+                if(res.status=="success"){
+                    alert("Successfully activated "+res.row_updated+" users")
+                    dynamic_update_table(selected_user,"#activate","true")
+                }else if ("fail"){
+                    alert("Update fail please contact tech support")
+                }
+                
+            }
+        })
+    })
+    
+    // --- verify user ---
+    $("#user_verify_btn").click(function(){
+        let selected_user = $("#selected_user:checked");
+        let update_user_array = [];
+
+        for (i=0;i<selected_user.length;i++){
+            update_user_array.push(selected_user[i].value)
+        }
+        console.log(update_user_array);
+        $.ajax({
+            url:"/manage-user",
+            type:"post",
+            data:{
+                type:"user-verify",
                 user_array: update_user_array,
             },
             success:function(res){

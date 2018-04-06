@@ -43,7 +43,8 @@ block content
                         | Action
                         span.caret
                     ul.dropdown-menu
-                        a#verify_btn.dropdown-item(href="#") Verify
+                        a#verify_btn.dropdown-item(href="#") Activate Account
+                        a#user_verify_btn.dropdown-item(href="#") Verify User
                         a#screen_btn.dropdown-item(href="#") Screen
                         a#promote_btn.dropdown-item(href="#") Promote Admin
                         a#delete_btn.dropdown-item(href="#") Suspend
@@ -59,9 +60,10 @@ block content
                         th(scope='col') First Name
                         th(scope='col') Last Name
                         th(scope='col') Role
+                        th(scope='col') Activated
                         th(scope='col') Verified
                         th(scope='col') Screened
-                        th(scope='col') Select
+                        th(scope='col') 
                 tbody#table_body.table-body
         
         //- ------ Manage Posts ------

@@ -1338,7 +1338,7 @@ app.post("/manage-user",function(req,res){
     // search user
     if(req.body.type == "get"){
         let match_input = "%"+req.body.input_value+"%";
-        pool.query("SELECT * FROM users WHERE LOWER(username) LIKE LOWER($1) OR LOWER(email) LIKE LOWER($1) OR CAST(user_id as varchar) =$2 ORDER BY user_id"
+        pool.query("SELECT * FROM users WHERE LOWER(username) LIKE LOWER($1) OR LOWER(email) LIKE LOWER($1) OR CAST(user_id as varchar) =$2 ORDER BY user_id DESC"
         ,[match_input,req.body.input_value]
         ,function(err,result){
             if(err){
@@ -1351,7 +1351,7 @@ app.post("/manage-user",function(req,res){
             }
         })
     }
-    // verify user
+    // account verify
     if(req.body.type == "verify"){
         let user_array = req.body.user_array;
         let user_arr_sql = "(";
@@ -1363,6 +1363,32 @@ app.post("/manage-user",function(req,res){
             }
         }
         pool.query("UPDATE users SET is_verified = true WHERE user_id IN "+user_arr_sql
+        ,[]
+        ,function(err,result){
+            if(err){
+                console.log(err);
+                res.send({status:"fail"});
+            }else{
+                res.send({
+                    status:"success",
+                    row_updated:result.rowCount,
+                })
+            }
+        })
+        
+    }
+    // verify user
+    if(req.body.type == "user-verify"){
+        let user_array = req.body.user_array;
+        let user_arr_sql = "(";
+        for(i=0; i<user_array.length;i++){
+            if(i==user_array.length-1){
+                user_arr_sql+=user_array[i]+")"
+            }else{
+                user_arr_sql+=user_array[i]+","
+            }
+        }
+        pool.query("UPDATE users SET verified = true WHERE user_id IN "+user_arr_sql
         ,[]
         ,function(err,result){
             if(err){

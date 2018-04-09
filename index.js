@@ -19,7 +19,7 @@ const server = require("http").createServer(app);
 var pF = path.resolve(__dirname, "html");
 const saltRounds = 10;
 var hashPass;
-
+var adminEmail = "edwardguo12@gmail.com"
 //----------------PostgrSQL connection---------------
 if (process.env.NODE_ENV === 'production') {
     pg.defaults.size = 20;
@@ -201,10 +201,19 @@ app.post("/register", function(req, resp) {
     if (req.body.agree) {
         if (stringRegex.test(req.body.username) && stringRegex.test(req.body.fname)&& stringRegex.test(req.body.lname) && passwordRegex.test(req.body.pass) && phoneRegex.test(req.body.phone) && phoneRegex.test(req.body.otherPhone) ){
             req.session.email=req.body.email
+            var role;
+            if(req.body.job == "coordinator"){
+                role = req.body.job
+                sub_role = "c"
+            } else {
+                role = 'ti'
+                sub_role = req.body.job
+            }
+
             var link="http://"+req.get('host')+"/verify?tc="+tocken+"&email="+req.body.email;
             bcrypt.genSalt(saltRounds,function(err,salt){
                 bcrypt.hash(req.body.pass,salt,function(err,hash){
-                    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken,location) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,req.body.job,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken,req.body.school],(err,res) => {
+                    pool.query( 'INSERT INTO users(username,password,email,first_name,last_name,role,phone_number,email_notification,is_verified,description,other_phone,tocken,location,sub_role) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)',[req.body.username,hash,req.body.email,req.body.fname,req.body.lname,role,req.body.phone,1,0,req.body.desp,req.body.otherPhone,tocken,req.body.school,sub_role],(err,res) => {
                         console.log(err)
                         if(err){
                             resp.send({status:"fail",message:"Input invalid to database"})
@@ -212,7 +221,7 @@ app.post("/register", function(req, resp) {
                         if(res != undefined && res.rowCount == 1){
                             resp.send({status:"success"})
                             
-                            mailer.emailVerify({reciver:req.body.email,link:link})
+                            mailer.emailVerify({reciver:adminEmail,link:link,user:req.body.fname+" "+ req.body.lname})
                         }
                     });
                 });
@@ -292,23 +301,31 @@ app.get("/verify",function(req,resp){
 
     pool.query('Select * from users where email = $1',[req.query.email],(err,res) => {
         var tocken;
-
+        var userName;
+        var userEmail;
         if(res != undefined && res.rowCount==1){
-
+            if(res.rows[0].is_verified == true){
+                resp.render('blocks/verify',{message2:"User already verified"})
+                return
+            }
             tocken = res.rows[0].tocken
-
+            userName = res.rows[0].first_name+" "+ res.rows[0].last_name     
+            userEmail = res.rows[0].email
         }
+
         if(tocken==req.query.tc){
-            pool.query("Update users set is_verified = true where email = $1",[req.query.email],(err,res) => {
+            pool.query("Update users set is_verified = true, verified = true where email = $1",[req.query.email],(err,res) => {
                 if(err){
                     console.log(err)
-                    resp.render('blocks/verify',{message:'Unable to verify account'})
+                    resp.render('blocks/verify',{message:'Unable to verify account database error'})
                 } else {
-                    resp.render('blocks/login',{message:'Verification successful'})
+                    var link="http://"+req.get('host')
+                    mailer.emailVerifySuccess({link:link,reciver:userEmail})
+                    resp.render('blocks/verify',{message2:"User "+userName+"'s account has been activated and verified"})
                 }
             })
         } else {
-             resp.render('blocks/verify', {message:'Verificaion fail'})
+             resp.render('blocks/verify', {message:'Verificaion fail tocken expired or changed please connect user to re-registe or active user use admin panel'})
         }
         if(res == undefined | res.rowCount==0){
             resp.render('blocks/verify',{message:"Account does not exist"})
@@ -1289,23 +1306,66 @@ app.get('/pleaseVerify',function(req,resp){
 
 // Create
 app.post('/new-post', function(req, resp) {
+
     function getNoticeUser(mail_title,post_url,role){
         let email_role;
-        if(role === 'coordinator'){
-            email_role = 'ti'
-        }else if (role === 'ti'){
-            email_role = 'coordinator'
-        }
-        pool.query("SELECT email FROM users WHERE email_notification = true and user_id != $1 and role = $2",[req.session.user_id,email_role]
-        ,function(err,result){
-            if(err){
-                console.log(err);
-            }else {
-                for(i=0;i<result.rows.length;i++){
-                    mailer.newPostNotification(mail_title,result.rows[i].email,post_url)
-                }   
+        let title;
+        let job = "user";
+        console.log(req.body)
+        if (role === 'ti'){
+            email_role = 'c'
+            if(req.session.sub_role == 'ti'){
+                job = "Interpreter/Transcriber"
             }
-        }) 
+            if(req.session.sub_role == 't'){
+                job = "Transcriber"
+            }
+            if(req.session.sub_role == 'i'){
+                job = "Interpreter"
+            }
+            title = "[PCAS] A new"+ job +" is looking for job. Desired Days: [" + req.body.days +　" ],Time [" + req.body.time + "]"
+            pool.query("SELECT email FROM users WHERE email_notification = true and is_verified = true and suspended = false and user_id != $1 and sub_role = $2",[req.session.user_id,email_role]
+            ,function(err,result){
+                if(err){
+                    console.log(err);
+                }else {
+                    for(i=0;i<result.rows.length;i++){
+                        mailer.newPostNotification(title,result.rows[i].email,post_url)
+                    }   
+                }
+            })
+            return; 
+        }
+        if(req.body.looking_for_interpreter == 'on'){
+             email_role = 'i'
+             title = "[PCAS] A new job post has created by School [ " + req.body.school + " ], Working Time at[ "+req.body.time+" ]"
+             pool.query("SELECT email FROM users WHERE email_notification = true and is_verified = true and suspended = false and user_id != $1 and sub_role = $2",[req.session.user_id,email_role]
+            ,function(err,result){
+                if(err){
+                    console.log(err);
+                }else {
+                    for(i=0;i<result.rows.length;i++){
+                        mailer.newPostNotification(title,result.rows[i].email,post_url)
+                    }   
+                }
+            }) 
+        } 
+        if (req.body.looking_for_transcriber == 'on'){
+            email_role = 't'
+            title = "[PCAS] A new job post has created by School [ " + req.body.school + " ], Working Time at[ "+req.body.time+" ]"
+            pool.query("SELECT email FROM users WHERE email_notification = true and is_verified = true and suspended = false and user_id != $1 and sub_role = $2",[req.session.user_id,email_role]
+            ,function(err,result){
+                if(err){
+                    console.log(err);
+                }else {
+                    for(i=0;i<result.rows.length;i++){
+                        mailer.newPostNotification(title,result.rows[i].email,post_url)
+                    }   
+                }
+            }) 
+        } 
+
+       
     }
     
     if (req.session.role === 'coordinator') {

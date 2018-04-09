@@ -13,13 +13,12 @@ $(document).ready(function() {
 	var altPhone = register_from.elements['other_phone'];
 	var desp = register_from.elements['description'];
 	var agree = register_from.elements['agree']
-	
+	var tscheck = document.getElementById("tscheck");
 	var usernameRegex = /^[a-zA-Z0-9\-_]{4,20}$/;
 	var nameRegex = /^[a-zA-Z]{1,15}$/;
 	var emailRegex = /^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$|^[a-zA-Z0-9\._\-]{1,50}@[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.[a-zA-Z0-9_\-]{1,50}(.[a-zA-Z0-9_\-])?.(ca|com|org|net|info|us|cn|co.uk|se)$/;
 	var passwordRegex = /^[^ \s]{4,15}$/;
 	var phoneRegex = /^$|^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/;
-
     var checkDic = {
                     "username":0,
 				   "first_name":0,
@@ -153,11 +152,14 @@ $(document).ready(function() {
 	
 //-------------    duplicate check end ----------// 
 //------------- Submit -------------------------//
-	
 
 	 $("form").submit(function(e){
 		 e.preventDefault();
-		 console.log("success")
+		 if(!tscheck.checked){
+		 	alertify.alert("Please read and agree the Terms and Services")
+		 	return;
+		 }
+
          for (var key in checkDic){
 			if (checkDic[key] == 0){
 				console.log(key)

@@ -15,8 +15,10 @@ block content
                     label(for='who-are-you') Who Are You:
                     select.form-control(name='who-are-you',required)
                         option
+                        option(value='t') Transcriber
+                        option(value='i') Interpreter
+                        option(value='ti') Interpreter and Transcriber
                         option(value='coordinator') Coordinator
-                        option(value='ti') Interpreter/Transcriber
                 .form-group.w-49
                     label(for='first-name') First Name:
                     input.form-control(type='text', name='first_name',required)
@@ -50,7 +52,7 @@ block content
                     label(for='description') Description:
                     textarea.form-control.w-100(name='description', rows='10', placeholder='Education, work experience, skills, etc.')
                 .form-inline.w-100
-                    input.mr-1(type='checkbox', name='agree')
+                    input#tscheck.mr-1(type='checkbox', name='agree')
                     | Yes, I have read and agree with the&nbsp;
                     a(href='/tos') Terms and Services
                     | .

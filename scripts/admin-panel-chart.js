@@ -7,22 +7,26 @@ $(document).ready(function(){
         $(e.currentTarget).find(".custom-card-text").css("display","none")
     })
 
+    let clicked_e;
     $(".card").click(function(e){
         // if clicked x close_card button
         if(e.target.id == "close_card"){
             close_card(e)
         }else{
+            clicked_e=e;
             open_card(e)
         }
         
     });
     
-    // $(window).click((e)=>{
-    //     console.log(e.target.contains(document.getElementsByClassName('card')))
-    //     if(e.target){
-    //         close_card(e);
-    //     }
-    // })
+    $(window).click((e)=>{
+        if(clicked_e){
+            if (!clicked_e.currentTarget.contains(e.target)){
+                close_card(clicked_e)
+                console.log("close")
+            }
+        }
+    })
 
     function close_card(e){
         $(".close_card").css("display","none");
@@ -357,10 +361,19 @@ $(document).ready(function(){
             console.log(res.data)
             let status_label = [];
             let status_count = []
-            $("#post_open_info").html(res.data[0].progress+": "+res.data[0].count);
-            $("#post_fulfill_info").html(res.data[1].progress+": "+res.data[1].count);
-            $("#post_inprogress_info").html(res.data[2].progress+": "+res.data[2].count)
-            $("#post_complete_info").html(res.data[3].progress+": "+res.data[3].count);
+            if(res.data[0] != undefined){
+                $("#post_open_info").html(res.data[0].progress+": "+res.data[0].count);
+            }
+            if(res.data[1] != undefined){
+                $("#post_fulfill_info").html(res.data[1].progress+": "+res.data[1].count);
+            }
+            if(res.data[2] != undefined){
+                $("#post_inprogress_info").html(res.data[2].progress+": "+res.data[2].count)
+            }
+            if(res.data[3] != undefined){
+                $("#post_complete_info").html(res.data[3].progress+": "+res.data[3].count);
+            }
+            
             
             res.data.forEach((e)=>{
                 status_label.push(e.progress)

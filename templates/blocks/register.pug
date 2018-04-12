@@ -15,8 +15,10 @@ block content
                     label(for='who-are-you') Who Are You:
                     select.form-control(name='who-are-you',required)
                         option
+                        option(value='t') Transcriber
+                        option(value='i') Interpreter
+                        option(value='ti') Interpreter and Transcriber
                         option(value='coordinator') Coordinator
-                        option(value='ti') Interpreter/Transcriber
                 .form-group.w-49
                     label(for='first-name') First Name:
                     input.form-control(type='text', name='first_name',required)
@@ -38,13 +40,8 @@ block content
                     input.form-control(type='password', name='confirm_password',required)
                 .form-group.w-33
                     label(for='School') School:
-                    select.form-control(name='school',required)
+                    select#schools.form-control(name='school',required)
                         option
-                        option(value='uvic') University of Victoria
-                        option(value='sfu') Simon Fraser University
-                        option(value='ubc') University of British Columbia
-                        option(value='langara') Langara College
-                        option(value='bcit') BCIT
                 .form-group.w-33
                     label(for='phone') Primary Phone #:
                     input.form-control(type='text', name='phone')
@@ -54,6 +51,11 @@ block content
                 .form-group.w-100
                     label(for='description') Description:
                     textarea.form-control.w-100(name='description', rows='10', placeholder='Education, work experience, skills, etc.')
+                .form-inline.w-100
+                    input#tscheck.mr-1(type='checkbox', name='agree')
+                    | Yes, I have read and agree with the&nbsp;
+                    a(href='/tos') Terms and Services
+                    | .
                 .text-right.w-100
                     input#Submit.btn.btn-primary.mr-1(type='submit', value='Register')
                     input.btn.btn-secondary(type='reset', value='Clear')

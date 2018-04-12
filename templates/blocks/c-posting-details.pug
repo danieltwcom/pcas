@@ -48,14 +48,15 @@ block content
                             |  #{post.other_phone}
         .col-9
             .card.mb-2
-                .card-body
-                    .d-flex.justify-content-between.align-items-center
+                .card-header
+                    .d-flex.justify-content-between
                         - var acceptedNum = 0
                         each v, i in applicant
                             if applicant[i].accepted === true
                                 - acceptedNum++
                         h3 [##{post.post_id}] #{post.title}
-                            if acceptedNum === (parseInt(post.num_of_interpreter) + parseInt(post.num_of_transcriber)) || post.progress === 'Fulfilled'
+                        h3
+                            if post.progress === 'Fulfilled'
                                 span.badge.badge-info.ml-1 Fulfilled
                             else if post.progress === 'Open'
                                 span.badge.badge-primary.ml-1 Open
@@ -63,31 +64,32 @@ block content
                                 span.badge.badge-warning.ml-1 In Progress
                             else if post.progress === 'Complete'
                                 span.badge.badge-success.ml-1 Complete
-                        strong
-                            | Posted on #{post.date_created.toDateString()} by 
-                            a(href='/profile?user_id=' + post.user_id) #{post.username}
-                            - var coordinatorUpvoteNum = 0
-                            each v, i in upvote
-                                if upvote[i].voted_user_id === post.user_id
-                                    - coordinatorUpvoteNum++
-                            span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
-                    hr
+                    strong
+                        | Posted on #{post.date_created.toDateString()}
+                        //-by 
+                        //-a(href='/profile?user_id=' + post.user_id) #{post.username}
+                        //- var coordinatorUpvoteNum = 0
+                        //-each v, i in upvote
+                            if upvote[i].voted_user_id === post.user_id
+                                - coordinatorUpvoteNum++
+                        //-span.badge.badge-primary.ml-1 +#{coordinatorUpvoteNum}
+                .card-body
                     label.d-block(for='details') Details:
                     | #{post.detail}
             
             if user.role === 'coordinator'
-                .card
-                    .card-body
-                        h3 Applicants
-                        hr
-                        if applicant.length > 0
+                if applicant.length > 0
+                    .card
+                        .card-body
+                            h3 Applicants
+                            hr
                             each val, index in applicant
                                 .applicant.border-bottom.mb-2.pb-2
                                     .d-flex.justify-content-between.align-items-center.mx-auto
                                         .w-5
-                                            img.rounded-circle.w-90(src='/files/' + applicant[index].avatar_url)
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
                                         .w-75
-                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].first_name} #{applicant[index].last_name}
                                             if applicant[index].is_screened
                                                 span.badge.badge-success.ml-1 Screened
                                             else
@@ -96,11 +98,11 @@ block content
                                                 span.badge.badge-success.ml-1 Verified
                                             else
                                                 span.badge.badge-secondary.ml-1 Unverified
-                                            - var applicantUpvoteNum = 0
-                                            each v, i in upvote
+                                            //- var applicantUpvoteNum = 0
+                                            //-each v, i in upvote
                                                 if upvote[i].voted_user_id === applicant[index].user_id
                                                     - applicantUpvoteNum++
-                                            span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
+                                            //-span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
                                         .w-20.d-flex.justify-content-end
                                             if applicant[index].accepted === true && post.progress === 'Complete' && applicant[index].ti_upvoted === false
                                                 form.application-upvote.mr-1(method='POST', action='/application/upvote')
@@ -108,8 +110,11 @@ block content
                                                     input(type='hidden', name='voter_id', value=applicant[index].user_id)
                                                     input(type='hidden', name='voted_user_id', value=applicant[index].applicant_id)
                                                     input.btn.btn-info.btn-sm(type='submit', value='Upvote User')
-                                            a(href='mailto:' + applicant[index].email)
-                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Email
+                                            a(href='/compose?recipient=' + applicant[index].username)
+                                                button.btn.btn-primary.btn-sm.mr-1(type='button') Message
+                                            if applicant[index].hide_email === false
+                                                a(href='mailto:' + applicant[index].email)
+                                                    button.btn.btn-primary.btn-sm.mr-1(type='button') Email
                                             if applicant[index].accepted === false
                                                 form.accept-applicant(method='POST', action='/accept-applicant')
                                                     input(type='hidden', name='application_id', value=applicant[index].application_id)
@@ -126,14 +131,37 @@ block content
                                     .applicant-comment
                                         label(for='comment') Comment:
                                         |  #{applicant[index].comments}
-                        else
-                            .alert.alert-warning.text-center
-                                h4 There are no applicants
             else if user.role === 'ti'
+                //--if applicant.length > 0
+                    .card.mb-2
+                        .card-body
+                            h3 Applicants
+                            hr
+                            each val, index in applicant
+                                .applicant.border-bottom.mb-2.pb-2
+                                    .d-flex.justify-content-between.align-items-center.mx-auto
+                                        .w-5
+                                            img.rounded-circle.w-90(src=applicant[index].avatar_url)
+                                        .w-95
+                                            a(href='/profile?user_id=' + applicant[index].user_id) #{applicant[index].username}
+                                            if applicant[index].is_screened
+                                                span.badge.badge-success.ml-1 Screened
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unscreened
+                                            if applicant[index].verified
+                                                span.badge.badge-success.ml-1 Verified
+                                            else
+                                                span.badge.badge-secondary.ml-1 Unverified
+                                            - var applicantUpvoteNum = 0
+                                            each v, i in upvote
+                                                if upvote[i].voted_user_id === applicant[index].user_id
+                                                    - applicantUpvoteNum++
+                                            span.badge.badge-primary.ml-1 +#{applicantUpvoteNum}
+                                    .applicant-comment
+                                        label(for='comment') Comment:
+                                        |  #{applicant[index].comments}
                 .card
                     .card-body
-                        h3 Apply
-                        hr
                         - var applied = false
                         each val, index in applicant
                             if applicant[index].user_id === user.user_id
@@ -143,6 +171,7 @@ block content
                                 .alert.alert-info.text-center
                                     h4 The number of applicants have been fulfilled
                             else
+                                h3 Apply
                                 form(action='/apply', method='post')
                                     input(type='hidden', name='post_id', value=post.post_id)
                                     input(type='hidden', name='user_id', value=user.user_id)

@@ -2,16 +2,17 @@ nav.navbar.navbar-light.bg-light.mb-3
     if user
         include dropdown
     .mx-auto.d-flex.align-items-center
-        img.w-10(src='/image/bcit.svg')
-        h3 Post-Secondary Communications Access Services 
-            if user
-                | #{user.user_id}
-    //-- .d-flex.w-20.align-items-center.border.p-2.rounded
-        img.rounded-circle.w-25.h-25.mr-1(src='/files/' + user.avatar_url)
-        div
+        a.w-10(href='/')
+            img.w-100(src='/image/bcit.svg')
+        h3 Post-Secondary Communications Access Services
+    if user
+        .d-flex.justify-content-end.w-15
+            #profile-pic-div-mini.mr-2(style='background: url("' + user.avatar_url + '") no-repeat; background-size: cover')
             div
-                a(href='/profile') #{user.username}
-            div
-                button.btn.btn-info.btn-sm#notification(type='button')
-                    i.fa.fa-bell-o.mr-1(aria-hidden='true')
-                    .badge.badge-light 10
+                .mb-2.pb-2.border-bottom
+                    a(href='/profile?user_id=' + user.user_id) #{user.first_name} #{user.last_name}
+                    //-span.badge.badge-primary.ml-1#user-panel-upvotes
+                .d-flex.align-items-center
+                    a(href='/inbox')
+                        i.fa.fa-envelope(aria-hidden='true')
+                    span.badge.badge-success.ml-1#message-notification

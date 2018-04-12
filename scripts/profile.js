@@ -3,21 +3,6 @@ $(document).ready(function() {
         location.href = '/edit-profile';
     });
 
-    // deletes the credential from the user profile
-    $(document).on('submit', 'form.delete-credential', function(e) {
-        e.preventDefault();
-
-        $(this).remove();
-    });
-
-    $('.custom-file-input').on('change', function() {
-        let filepath = $(this).val();
-        let lastSlash = filepath.lastIndexOf('\\');
-        let filename = filepath.slice(lastSlash + 1);
-
-        $('#upload-filename').html(filename)
-    });
-
     $('#upload-profile-pic-button').on('click', function() {
         $('#profile-pic-input').click();
     });
@@ -41,5 +26,21 @@ $(document).ready(function() {
                 }
             }
         });
+    });
+
+    var queryString = location.href.split('?');
+    var queryStringParts = queryString[1].split('=');
+    var userId = parseInt(queryStringParts[1]);
+
+    $.ajax({
+        method: 'POST',
+        url: '/get-user-post-info',
+        data: {
+            user_id: userId
+        },
+        success: function(resp) {
+            $('#total-posts').html(resp.total_posts);
+            $('#total-applied-to').html(resp.total_app);
+        }
     });
 });

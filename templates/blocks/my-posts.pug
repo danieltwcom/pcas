@@ -15,7 +15,7 @@ block content
                 if user.role === 'coordinator'
                     .w-10
                         strong Status
-                    .w-10
+                    //--.w-10
                         strong Action
                 else if user.role === 'ti'
                     .w-10
@@ -33,11 +33,11 @@ block content
                                 span.badge.badge-primary(id='progress-' + posts[index].post_id) Open
                             else if posts[index].progress === 'Fulfilled'
                                 span.badge.badge-info(id='progress-' + posts[index].post_id) Fulfilled
-                            else if posts[index].progress === 'In Progress'
+                            //--else if posts[index].progress === 'In Progress'
                                 span.badge.badge-warning(id='progress-' + posts[index].post_id) In Progress
-                            else if posts[index].progress === 'Complete'
+                            //--else if posts[index].progress === 'Complete'
                                 span.badge.badge-success(id='progress-' + posts[index].post_id) Complete
-                        .w-10
+                        //--.w-10
                             if posts[index].progress !== 'Complete'
                                 form.change-progress(method='POST', action='/change-progress')
                                     input(type='hidden', name='post_id', value=posts[index].post_id)
@@ -51,7 +51,7 @@ block content
                         .w-10
                         .w-10
                     .w-15.d-flex.justify-content-end
-                        if posts[index].status === false
+                        if posts[index].is_hidden === true
                             form.activate(action='/activate-post', method='POST')
                                 input(type='hidden', name='post_id', value=posts[index].post_id)
                                 input.btn.btn-sm.btn-primary.mr-1(type='submit', value='Show')
@@ -60,9 +60,12 @@ block content
                                 input(type='hidden', name='post_id', value=posts[index].post_id)
                                 input.btn.btn-sm.btn-danger.mr-1(type='submit', value='Hide')
                         button.btn.btn-sm.btn-info.mr-1(type='button', onclick='location.href="/edit-post?post_id=' + posts[index].post_id + '"') Edit
-                        form.delete-post(action='/delete-post', method='POST')
-                            input(type='hidden', name='post_id', value=posts[index].post_id)
-                            input.btn.btn-sm.btn-danger(type='submit', value='Delete')
+                        if posts[index].is_archived === false
+                            form.delete-post(action='/archive-post', method='POST')
+                                input(type='hidden', name='post_id', value=posts[index].post_id)
+                                input.btn.btn-sm.btn-danger(type='submit', value='Archive')
+                        else
+                            button.btn.btn-sm.btn-danger(type='button', disabled) Archived
             //--form.my-post(action='/delete-post', method='post')
                 .d-flex.justify-content-between.align-items-center.mb-2
                     .w-65

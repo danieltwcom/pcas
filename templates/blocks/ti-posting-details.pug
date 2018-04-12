@@ -18,7 +18,7 @@ block content
                     - var sun = daysArray.indexOf('Sun')
                     if post.hide_email === false
                         label.d-block(for='email') Email:
-                        a(href='mailto:' + post.email) #{user.email}
+                        a(href='mailto:' + post.email) #{post.email}
                         hr
                     if post.hide_phone === false
                         label.d-block(for='phone') Phone Number:
@@ -50,13 +50,13 @@ block content
                         span.badge.badge-primary.mr-1 Sunday
         .col-8
             .card.mb-2
+                .card-header
+                    h3 [##{post.post_id}] #{post.first_name} #{post.last_name}
+                    strong
+                        | Posted on #{post.date_created.toDateString()}
+                        //-by 
+                        //-a(href='/profile?user_id=' + post.user_id) #{post.username} 
                 .card-body
-                    .d-flex.justify-content-between.align-items-center
-                        h3 [##{post.post_id}] #{post.title}
-                        strong
-                            | Posted on #{post.date_created.toDateString()} by 
-                            a(href='/profile?user_id=' + post.user_id) #{post.username} 
-                    hr
                     label.d-block(for='details') Details:
                     | #{post.details}
             //--.card

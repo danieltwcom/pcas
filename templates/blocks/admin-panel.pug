@@ -23,6 +23,8 @@ block content
                     a#manage_user_btn(href="#") Manage Users
                     a#manage_post_btn(href="#") Manage Posts
                     a#manage_statistic_btn(href="#") Statistic
+                    a(href="/postings") View Postings
+                    a(href="/logout") Logout
 
         //- ------ Manage Users ------
         #manage-user.content.container
@@ -41,10 +43,12 @@ block content
                         | Action
                         span.caret
                     ul.dropdown-menu
-                        a#verify_btn.dropdown-item(href="#") Verify
+                        a#verify_btn.dropdown-item(href="#") Activate Account
+                        a#user_verify_btn.dropdown-item(href="#") Verify User
                         a#screen_btn.dropdown-item(href="#") Screen
                         a#promote_btn.dropdown-item(href="#") Promote Admin
-                        a#delete_btn.dropdown-item(href="#") Delete
+                        a#delete_btn.dropdown-item(href="#") Suspend
+                        a#undo_delete_btn.dropdown-item(href="#") Unsuspend
             
             //- found user table
             table#user_table.table.table-light.table-hover.mt-2
@@ -56,9 +60,10 @@ block content
                         th(scope='col') First Name
                         th(scope='col') Last Name
                         th(scope='col') Role
+                        th(scope='col') Activated
                         th(scope='col') Verified
                         th(scope='col') Screened
-                        th(scope='col') Select
+                        th(scope='col') 
                 tbody#table_body.table-body
         
         //- ------ Manage Posts ------
@@ -85,7 +90,7 @@ block content
                         a#complete_post_btn.dropdown-item(href="#") Complete
                         label.ml-3 Manage Post
                         a#modify_post_btn.dropdown-item(href="#") Modify
-                        a#delete_post_btn.dropdown-item(href="#") Delete
+                        a#delete_post_btn.dropdown-item(href="#") Archive
             
             //- table tabs
             ul#myTab.nav.nav-tabs.mt-2(role='tablist')
@@ -122,7 +127,7 @@ block content
                         tbody#ti_post_table_body.table-body
 
         #manage-statistic.content.container
-            .card-deck
+            .card-deck.justify-content-center
                 .card.border-info.mb-3(style='max-width: 18rem;')
                     .card-header.text-center.bg-info
                         h5 Posts

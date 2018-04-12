@@ -4,18 +4,24 @@ append scripts
     script(src='/scripts/message-details.js')
 
 block content
-    h3 Subject
+    h3 #{message.subject}
     .card
         .card-header
             .d-flex
-                .w-10
-                    strong From:
-                div Dummy
+                if message.sender === user.username
+                    .w-10
+                        strong To:
+                    div #{message.recipient}
+                else
+                    .w-10
+                        strong From:
+                    div #{message.sender}
             .d-flex
                 .w-10
                     strong Date:
-                div Wednesday, March 21, 2018
-        .card-body Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam omnis voluptatum eveniet corrupti dolore repudiandae recusandae accusamus expedita veniam exercitationem at adipisci dolores cumque, excepturi hic consequuntur totam, necessitatibus debitis.
-        .card-footer.text-right
-            button.btn.btn-primary.mr-1#reply(type='button') Reply
-            button.btn.btn-danger(type='button') Delete
+                div #{convertDate(message.date_created, true)}
+        .card-body #{message.message}
+        if message.recipient === user.username
+            .card-footer.text-right
+                a(href='/compose?recipient=' + message.sender + '&id=' + message.message_id)
+                    button.btn.btn-primary.mr-1#reply(type='button') Reply

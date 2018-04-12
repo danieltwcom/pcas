@@ -100,7 +100,12 @@ $(document).ready(function(){
                         tr.appendChild(user_id);
 
                         let username = document.createElement("td");
-                        username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a>';
+                        username.id = "table_username";
+                        if(res[i].suspended == true){
+                            username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a><span style="color:red; font-size:10px;">suspended</span>';
+                        }else{
+                            username.innerHTML = '<a target="_blank" href="/profile?user_id='+res[i].user_id+'">'+res[i].username+'</a>';
+                        }
                         tr.appendChild(username);
 
                         let email = document.createElement("td");
@@ -115,15 +120,32 @@ $(document).ready(function(){
                         last_name.innerHTML = res[i].last_name;
                         tr.appendChild(last_name);
 
+                        let var_role;
+                        if(res[i].sub_role=='ti'){
+                            var_role = 'Interpreter/Transcriber'
+                        }else if(res[i].sub_role=='i'){
+                            var_role = 'Interpreter'
+                        }else if(res[i].sub_role=='t'){
+                            var_role = 'Transcriber'
+                        }else if(res[i].sub_role=='c'){
+                            var_role = 'Coordinator'
+                        }else if(res[i].sub_role=='a'){
+                            var_role = 'Admin'
+                        }
                         let role = document.createElement("td");
-                        role.innerHTML = res[i].role;
+                        role.innerHTML = var_role;
                         role.id = "role"
                         tr.appendChild(role);
 
                         let is_verified = document.createElement("td");
                         is_verified.innerHTML = res[i].is_verified;
-                        is_verified.id = "verified";
+                        is_verified.id = "activate";
                         tr.appendChild(is_verified);
+
+                        let verified = document.createElement("td");
+                        verified.innerHTML = res[i].verified;
+                        verified.id = "verified";
+                        tr.appendChild(verified);
 
                         let is_screened = document.createElement("td");
                         is_screened.innerHTML = res[i].is_screened;
@@ -142,7 +164,7 @@ $(document).ready(function(){
         })
     })
 
-    // --- verified user ---
+    // --- active account ---
     $("#verify_btn").click(function(){
         let selected_user = $("#selected_user:checked");
         let update_user_array = [];
@@ -156,6 +178,35 @@ $(document).ready(function(){
             type:"post",
             data:{
                 type:"verify",
+                user_array: update_user_array,
+            },
+            success:function(res){
+                console.log(res)
+                if(res.status=="success"){
+                    alert("Successfully activated "+res.row_updated+" users")
+                    dynamic_update_table(selected_user,"#activate","true")
+                }else if ("fail"){
+                    alert("Update fail please contact tech support")
+                }
+                
+            }
+        })
+    })
+    
+    // --- verify user ---
+    $("#user_verify_btn").click(function(){
+        let selected_user = $("#selected_user:checked");
+        let update_user_array = [];
+
+        for (i=0;i<selected_user.length;i++){
+            update_user_array.push(selected_user[i].value)
+        }
+        console.log(update_user_array);
+        $.ajax({
+            url:"/manage-user",
+            type:"post",
+            data:{
+                type:"user-verify",
                 user_array: update_user_array,
             },
             success:function(res){
@@ -219,9 +270,40 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res)
                 if(res.status=="success"){
-                    alert("Successfully delete "+res.row_updated+" users")
+                    alert("Successfully suspended "+res.row_updated+" users")
                     for(i=0;i<selected_user.length;i++){
-                        $(selected_user[i]).parents("tr").remove();
+                        $(selected_user[i]).parents("tr").find("#table_username").append('<span style="color:red; font-size:10px;">suspended</span>')
+                    }
+                }else if ("fail"){
+                    alert("Delete fail please contact tech support")
+                }
+                
+            }
+        })
+    })
+
+    // --- undo delete user ---
+    $("#undo_delete_btn").click(function(){
+        let selected_user = $("#selected_user:checked");
+        let update_user_array = [];
+
+        for (i=0;i<selected_user.length;i++){
+            update_user_array.push(selected_user[i].value)
+        }
+        console.log(update_user_array);
+        $.ajax({
+            url:"/manage-user",
+            type:"post",
+            data:{
+                type:"undo-delete",
+                user_array: update_user_array,
+            },
+            success:function(res){
+                console.log(res)
+                if(res.status=="success"){
+                    alert("Successfully unsuspended "+res.row_updated+" users")
+                    for(i=0;i<selected_user.length;i++){
+                        let o_html = $(selected_user[i]).parents("tr").find("#table_username span").remove();
                     }
                 }else if ("fail"){
                     alert("Delete fail please contact tech support")
@@ -409,7 +491,7 @@ $(document).ready(function(){
             success:function(res){
                 console.log(res)
                 if(res.status=="success"){
-                    alert("Successfully delete "+res.row_updated+" posts")
+                    alert("Successfully archived "+res.row_updated+" posts")
                     for(i=0;i<selected_co_post.length;i++){
                         $(selected_co_post[i]).parents("tr").remove();
                     }

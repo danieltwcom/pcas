@@ -24,16 +24,17 @@ $(document).ready(function() {
         alertify
         .okBtn('Yes')
         .cancelBtn('No')
-        .confirm('Are you sure you want to delete this post?<br><small>You cannot revert this</small>', function(e) {
+        .confirm('Are you sure you want to archive this post?<br><small>You cannot revert this</small>', function(e) {
             $.ajax({
                 method: 'POST',
-                url: '/delete-post',
+                url: '/archive-post',
                 data: form.serialize(),
                 success: function(resp) {
                     console.log(resp);
                     if (resp.status === 'success') {
-                        alertify.alert('Post successfully deleted');
-                        $(form).parent().parent().remove();
+                        alertify.alert('Post successfully archived.');
+                        $(form).removeAttr('method action');
+                        $(form).find('input[type=submit]').attr({'value': 'Archived', 'disabled': 'disabled'});
                     } else if (resp.status === 'fail') {
                         alertify.alert('An error occurred. Please contact the administrator.');
                     }
@@ -60,8 +61,10 @@ $(document).ready(function() {
                 success: function(resp) {
                     console.log(resp);
                     if (resp.status === 'empty') {
+                        form.off('submit');
                         alertify.okBtn('Ok').alert('There are no applicants to change the progress.');
                     } else if (resp.status === 'fail') {
+                        form.off('submit');
                         alertify.okBtn('Ok').alert('An error occurred.');
                     } else if (resp.status === 'success') {
                         form.off('submit');

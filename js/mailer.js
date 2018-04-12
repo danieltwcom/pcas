@@ -11,12 +11,32 @@ let transporter = nodemailer.createTransport({
 var emailVerify = function (req,res,next){
 	
     
-	const body = 'Hi there, <br/> Thank you for registering! <br/><br/> Please verify your account by typing the flowing link. <br/> <a href = '+req.link+'>'+ req.link + ' </a>'
+	const body = 'Hello, <br/> User <b>'+req.user+'</b> is registering. <br/><br/> Please verify this account by click the flowing link. <br/> <a href = '+req.link+'>'+ req.link + ' </a>'
 	
 	let mailOptions = {
           from:'bcitpcas@gmail.com', // sender address
           to: req.reciver, // list of receivers
-          subject: "pcas verification", // Subject line
+          subject: "PCAS New user[ "+ req.user+"] registering please verify", // Subject line
+          html: body // html body
+      };
+      transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+              return console.log(error);
+          }
+          console.log('Message %s sent: %s', info.messageId, info.response);
+              res.render('index');
+          });
+}
+
+var emailVerifySuccess = function (req,res,next){
+  
+    
+  const body = "Hello your account has been verified please click flowing link to loggin <br></br> <a href = "+ req.link + "> Log in </a>"  
+  
+  let mailOptions = {
+          from:'bcitpcas@gmail.com', // sender address
+          to: req.reciver, // list of receivers
+          subject: "[PCAS] Your account has been verified", // Subject line
           html: body // html body
       };
       transporter.sendMail(mailOptions, (error, info) => {
@@ -45,8 +65,26 @@ var emailForgetPass = function(req,res,next){
           });
 }
 
+let newPostNotification = function (mail_title,email,post_url){
+    let mailOptions = {
+        from:'pcasnotification@gmail.com',
+        to: email,
+        subject:mail_title,
+        html:"Check out the post "+"<a href='http://"+post_url+"'>here</a>"// todo
+    }
+    transporter.sendMail(mailOptions,function(err,info){
+        if(err){
+            console.log(err)
+        }else{
+            console.log('Email sent: '+ info.response);
+        }
+    })
+}
+
 module.exports = {
 	emailVerify:emailVerify,
-  emailForgetPass:emailForgetPass
+    emailForgetPass:emailForgetPass,
+    newPostNotification:newPostNotification,
+    emailVerifySuccess:emailVerifySuccess,
 }
 

@@ -77,7 +77,23 @@ function acceptApplicant(form) {
     });
 }
 
-function revokeApplicant(form) {
+function createPost(form) {    
+    $.ajax({
+        method: 'POST',
+        url: '/new-post',
+        data: form.serialize(),
+        success: function(resp) {
+            if (resp.status === 'success') {
+                localStorage.clear();
+                location.href = '/post-created';
+            } else if (resp.status === 'fail') {
+                alert('an error occurred');
+            }
+        }
+    });
+}
+
+/* function revokeApplicant(form) {
     $.ajax({
         method: 'POST',
         url: '/revoke-applicant',
@@ -97,6 +113,38 @@ function revokeApplicant(form) {
             }  else if (resp.status === 'fail') {
                 alertify.alert('An error occurred. Please contact the administrator.');
             }
+        }
+    });
+} */
+
+function upvote(form) {
+    $.ajax({
+        method: 'POST',
+        url: '/application/upvote',
+        data: form.serialize(),
+        success: function(resp) {
+            console.log(resp);
+            if (resp.status === 'voted') {
+                alertify.alert('You can only vote once per completed job');
+            } else if (resp.status === 'incomplete') {
+                alertify.alert('You must complete the job first before upvoting');
+            } else if (resp.status === 'success') {
+                alertify.alert('Upvoted');
+                $(form).find('input').remove()
+            }
+        }
+    });
+}
+
+function getDocuments(user_id, div) {
+    $.ajax({
+        method: 'POST',
+        url: '/get-documents',
+        data: {
+            user_id: user_id
+        },
+        success: function(resp) {
+            console.log(resp);
         }
     });
 }

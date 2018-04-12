@@ -1,0 +1,38 @@
+extends ../layout
+
+block content
+    .container-fluid
+        .row
+            .col-4
+                .card
+                    .card-body
+                        li
+                            a(href='#one') What does it mean when a user is verified?
+                        li
+                            a(href='#two') What does it mean when a user is screened?
+                        li
+                            a(href='#five') Is there a way to delete posts that I've created?
+                        li
+                            a(href='#six') I have email notifications turned on, but I'm not receiving any emails whenever there is a new posting. What is going on?
+            .col-8
+                .card
+                    .card-body.scroll-div
+                        #one
+                            b What does it mean when a user is verified?
+                            br
+                            | Verified users are users who are known amongst the community. If you feel you should be verified, contact the administrator.
+                            hr
+                        #two
+                            b What does it mean when a user is screened?
+                            br
+                            | Screened users are users who have past the four tests that proves their qualification in their fields of study. If you would like to become screened, please contact the administrator.
+                            hr
+                        #five
+                            b Is there a way to delete posts that I've created?
+                            br
+                            | No, but you can archive them. Note that if you choose to archive them, you cannot unarchive them. Archived posts will not be shown to other users.
+                            hr
+                        #six
+                            b I have email notifications turned on, but I'm not receiving any emails whenever there is a new posting. What is going on?
+                            br
+                            | PCAS Jobs Line is using gmail's free SMTP to send out email notifications and is only allowed 500 recipients per day.

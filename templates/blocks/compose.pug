@@ -11,10 +11,14 @@ block content
             .card-header
                 div
                     label(for='recipient') To:
-                    input.form-control(type='text', name='recipient')
+                    input.form-control(type='text', name='recipient', value=recipient)
                 div
-                    label(for='subject') Subject:
-                    input.form-control(type='text', name='subject')
+                    if message
+                        label(for='subject') Subject:
+                        input.form-control(type='text', name='subject', value='Re: ' + message.subject)
+                    else
+                        label(for='subject') Subject:
+                        input.form-control(type='text', name='subject')
             .card-body
                 label(for='message') Message:
                 textarea.form-control.w-100#message(name='message', rows='10')

@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+    .card.w-50.mx-auto
+        .card-body.text-center
+            if message === '404'
+                h1 404
+                | Your request is not found.
+            else if message === 'no'
+                h1 Not Allowed
+                | Administrator cannot submit postings.
